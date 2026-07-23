@@ -163,6 +163,7 @@
       : path.includes('/ticket/fetch') ? (queryId ? Object.assign({}, tickets[0], { message: [{ id: 1, is_me: true, message: '导入订阅后无法连接，请协助检查。', created_at: now - 7200 }, { id: 2, is_me: false, message: '您好，请更新订阅后重新测试。', created_at: now - 1800 }] }) : tickets)
       : path.includes('/ticket/save') || path.includes('/ticket/reply') || path.includes('/ticket/close') ? true
       : path.includes('/stat/getTrafficLog') ? [{ d: 3.4 * 1024 ** 3, u: .8 * 1024 ** 3, record_at: now - 86400 * 2, server_rate: 1 }, { d: 6.2 * 1024 ** 3, u: 1.1 * 1024 ** 3, record_at: now - 86400, server_rate: 1.2 }, { d: 2.8 * 1024 ** 3, u: .5 * 1024 ** 3, record_at: now, server_rate: 1 }]
+      : path.includes('/resetSecurity') ? true
       : true;
     return new Promise(resolve => setTimeout(() => resolve(data), 180));
   }
@@ -360,6 +361,10 @@
           <section class="card card-pad"><div class="card-title"><div><h2>订阅链接</h2><p>添加到你的客户端</p></div>${icon('wifi')}</div>
             <div class="subscribe-box"><span class="subscribe-url">${e(subscribe.subscribe_url || '暂无订阅链接')}</span><button class="btn btn-primary btn-sm" data-action="copy-sub" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('copy')} 复制</button></div>
             <div class="info-list" style="margin-top:14px"><div class="info-item"><span>设备数量</span><b>${subscribe.device_limit || '不限'}</b></div><div class="info-item"><span>速度上限</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : '不限速'}</b></div><div class="info-item"><span>订阅状态</span><b><span class="status success">正常</span></b></div></div>
+            <div class="subscribe-actions">
+              <button class="btn btn-warning btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} 重置订阅</button>
+              <span class="hint-text">重新生成订阅链接，旧链接将失效</span>
+            </div>
           </section>
         </div>`;
       app.innerHTML = shell(content, '仪表盘', config.tagline);
@@ -636,6 +641,9 @@
       clearAuth(); toast('已安全退出'); go('login');
     } else if (action === 'copy-sub') {
       try { await navigator.clipboard.writeText(state.subscribe?.subscribe_url || ''); toast('订阅链接已复制'); } catch { toast('复制失败，请手动复制', 'error'); }
+    } else if (action === 'reset-subscribe') {
+      if (!confirm('确定要重置订阅链接吗？旧链接将立即失效。')) return;
+      try { await api('/user/resetSecurity', { method: 'POST' }); toast('订阅链接已重置'); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'copy-invite') {
       try { await navigator.clipboard.writeText(target.dataset.link || ''); toast('邀请链接已复制'); } catch { toast('复制失败，请手动复制', 'error'); }
     } else if (action === 'open-doc') openDoc(target.dataset.id);

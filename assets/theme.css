@@ -147,8 +147,13 @@ img { max-width: 100%; }
 .btn-secondary { color: var(--ink); background: var(--surface-soft); border: 1px solid var(--line); }
 .btn-ghost { min-height: 40px; color: var(--ink-soft); background: transparent; padding: 0 12px; }
 .btn-danger { color: #fff; background: var(--danger); }
+.btn-warning { color: #fff; background: #fb6340; }
+.btn-warning:hover { background: #ea5330; }
 .btn-block { width: 100%; min-height: 50px; }
 .btn-sm { min-height: 36px; border-radius: 10px; padding: 0 12px; font-size: 12px; }
+
+.subscribe-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.subscribe-actions .hint-text { color: var(--ink-soft); font-size: 12px; }
 
 .app-shell { min-height: 100vh; }
 .sidebar {
