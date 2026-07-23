@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Argon-Xboard 主题调试台</title>
+  <link rel="stylesheet" href="./assets/theme.css">
+  <style>
+    #dbg-panel {
+      position: fixed; right: 16px; bottom: 16px; width: 320px; max-height: 86vh;
+      overflow-y: auto; z-index: 9999; background: #1c1f2b; color: #e7e9f3;
+      border: 1px solid #2e3346; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      font: 13px/1.5 system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    #dbg-panel.hidden .dbg-body { display: none; }
+    .dbg-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; cursor: pointer; user-select: none;
+      background: linear-gradient(135deg, #5e72e4, #4a5bd0); color: #fff; border-radius: 14px 14px 0 0;
+    }
+    .dbg-head b { font-size: 13px; letter-spacing: .3px; }
+    .dbg-head span { font-size: 11px; opacity: .85; }
+    .dbg-body { padding: 14px; }
+    .dbg-group { margin-bottom: 14px; }
+    .dbg-group > label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #9aa0c0; margin-bottom: 6px; }
+    .dbg-row { display: flex; gap: 8px; align-items: center; }
+    .dbg-row.inline { gap: 14px; }
+    .dbg-field { margin-bottom: 10px; }
+    .dbg-field label { display: block; font-size: 12px; color: #c4c9e6; margin-bottom: 4px; }
+    .dbg-field input[type=text], .dbg-field textarea {
+      width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px;
+      border: 1px solid #353a52; background: #12141d; color: #e7e9f3; font-size: 12px; font-family: inherit;
+    }
+    .dbg-field textarea { resize: vertical; min-height: 48px; }
+    .dbg-radio { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #d7dbf0; cursor: pointer; }
+    .dbg-field select {
+      width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px;
+      border: 1px solid #353a52; background: #12141d; color: #e7e9f3; font-size: 12px; font-family: inherit;
+    }
+    .dbg-color { display: flex; align-items: center; gap: 8px; }
+    .dbg-color input[type=color] { width: 40px; height: 32px; border: none; background: none; padding: 0; cursor: pointer; }
+    .dbg-color input[type=text] { flex: 1; }
+    .dbg-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .dbg-btn {
+      flex: 1; padding: 9px; border: none; border-radius: 9px; cursor: pointer;
+      font-size: 12px; font-weight: 600; font-family: inherit;
+    }
+    .dbg-btn.primary { background: #5e72e4; color: #fff; }
+    .dbg-btn.primary:hover { background: #5a49f0; }
+    .dbg-btn.ghost { background: #2a2f42; color: #c4c9e6; }
+    .dbg-btn.ghost:hover { background: #343a52; }
+    .dbg-note { font-size: 11px; color: #7e85a8; margin-top: 4px; }
+    .dbg-divider { height: 1px; background: #2e3346; margin: 4px 0 14px; }
+    .dbg-tag { display:inline-block; padding:1px 6px; border-radius:6px; background:#2a2f42; color:#9aa0c0; font-size:10px; }
+  </style>
+</head>
+<body>
+  <div id="app"><div class="boot-screen"><div class="brand-mark brand-mark--large"><span></span><span></span></div><div class="boot-line"><i></i></div><p>正在载入预览…</p></div></div>
+
+  <!-- 调试台：写入 localStorage 后重载页面，主题会重新读取配置 -->
+  <aside id="dbg-panel">
+    <div class="dbg-head" id="dbg-head">
+      <div><b>Argon-Xboard 调试台</b><br><span>切换登录态 / 后台配置项</span></div>
+      <span id="dbg-caret">▾</span>
+    </div>
+    <div class="dbg-body">
+      <div class="dbg-group">
+        <label>登录态</label>
+        <div class="dbg-row inline">
+          <label class="dbg-radio"><input type="radio" name="dbg_state" value="guest"> 游客</label>
+          <label class="dbg-radio"><input type="radio" name="dbg_state" value="user"> 已登录</label>
+        </div>
+      </div>
+
+      <div class="dbg-group">
+        <label>默认打开页面</label>
+        <select id="dbg_route">
+          <option value="login">登录 login</option>
+          <option value="register">注册 register</option>
+          <option value="dashboard">仪表盘 dashboard</option>
+          <option value="plans">购买订阅 plans</option>
+          <option value="orders">我的订单 orders</option>
+          <option value="invites">我的邀请 invites</option>
+          <option value="nodes">节点状态 nodes</option>
+          <option value="tickets">我的工单 tickets</option>
+          <option value="traffic">流量明细 traffic</option>
+          <option value="account">个人中心 account</option>
+          <option value="docs">使用文档 docs</option>
+        </select>
+      </div>
+
+      <div class="dbg-divider"></div>
+
+      <div class="dbg-group">
+        <label>品牌与配色</label>
+        <div class="dbg-field">
+          <label>主题色（实时生效）</label>
+          <div class="dbg-color">
+            <input type="color" id="dbg_primaryColor" value="#5e72e4">
+            <input type="text" id="dbg_primaryColorText" value="#5e72e4">
+          </div>
+        </div>
+        <div class="dbg-field">
+          <label>品牌名称 brandName</label>
+          <input type="text" id="dbg_brandName" value="Argon-Xboard">
+        </div>
+        <div class="dbg-field">
+          <label>品牌标语 tagline</label>
+          <input type="text" id="dbg_tagline" value="清晰、现代、稳定的连接体验">
+        </div>
+        <div class="dbg-field">
+          <label>Logo 地址 logoUrl（留空显示图形标识）</label>
+          <input type="text" id="dbg_logoUrl" value="">
+        </div>
+      </div>
+
+      <div class="dbg-divider"></div>
+
+      <div class="dbg-group">
+        <label>内容与入口</label>
+        <div class="dbg-field">
+          <label>首页公告 announcement</label>
+          <textarea id="dbg_announcement">这是 Argon-Xboard 的本地演示数据。安装到 Xboard 后将自动读取真实账户与订阅信息。</textarea>
+        </div>
+        <div class="dbg-field">
+          <label>客服地址 supportUrl</label>
+          <input type="text" id="dbg_supportUrl" value="https://example.com">
+        </div>
+        <div class="dbg-field">
+          <label>页脚文字 footerText</label>
+          <input type="text" id="dbg_footerText" value="Argon-Xboard · Xboard 用户端主题">
+        </div>
+        <div class="dbg-field">
+          <label>自定义页脚 HTML customHtml <span class="dbg-tag">主题未渲染</span></label>
+          <textarea id="dbg_customHtml" placeholder="config.json 有此配置项，但 theme.js 当前未使用"></textarea>
+          <div class="dbg-note">提示：theme.js 没有读取 config.customHtml，二次开发时可在 dashboard.blade.php 或主题里自行挂载。</div>
+        </div>
+      </div>
+
+      <div class="dbg-divider"></div>
+
+      <div class="dbg-group">
+        <label>界面</label>
+        <div class="dbg-row inline">
+          <label class="dbg-radio"><input type="radio" name="dbg_theme" value="light"> 浅色</label>
+          <label class="dbg-radio"><input type="radio" name="dbg_theme" value="dark"> 深色</label>
+        </div>
+      </div>
+
+      <div class="dbg-actions">
+        <button class="dbg-btn primary" id="dbg_apply">应用并重载</button>
+        <button class="dbg-btn ghost" id="dbg_reset">重置默认</button>
+      </div>
+      <div class="dbg-note" style="margin-top:8px">配置存于 localStorage（nebulax_debug），重载即生效。修改 theme.css / theme.js 后刷新即可看到变化。</div>
+    </div>
+  </aside>
+
+  <!-- 1) 先于 theme.js 注入调试配置与登录态 -->
+  <script>
+    (function () {
+      const KEY = 'nebulax_debug';
+      let dbg = {};
+      try { dbg = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { dbg = {}; }
+      // URL 参数可临时覆盖（不影响已保存的调试配置）：?state=user&route=dashboard&color=%236d5dfc
+      const qp = new URLSearchParams(location.search);
+      if (qp.get('state') === 'user') dbg.loggedIn = true;
+      else if (qp.get('state') === 'guest') dbg.loggedIn = false;
+      if (qp.get('route')) dbg.route = qp.get('route');
+      if (qp.get('color')) { dbg.config = dbg.config || {}; dbg.config.primaryColor = qp.get('color'); }
+      const config = Object.assign({
+        title: 'Argon-Xboard', brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验',
+        primaryColor: '#5e72e4', logoUrl: '', announcement: '',
+        supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题'
+      }, dbg.config || {});
+      window.NEBULAX_PREVIEW = true;
+      window.XBOARD_THEME = config;
+      if (dbg.loggedIn) localStorage.setItem('nebulax_auth_data', 'Bearer preview-token');
+      else localStorage.removeItem('nebulax_auth_data');
+      if (dbg.route) location.hash = '#/' + dbg.route;
+      if (dbg.colorMode) localStorage.setItem('nebulax_color_mode', dbg.colorMode);
+    })();
+  </script>
+
+  <!-- 2) 加载主题本体（只读，不改动） -->
+  <script src="./assets/theme.js"></script>
+
+  <!-- 3) 调试台交互逻辑 -->
+  <script>
+    (function () {
+      const KEY = 'nebulax_debug';
+      const $ = id => document.getElementById(id);
+      const defaults = {
+        loggedIn: false, route: 'login', colorMode: 'light',
+        config: {
+          brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', primaryColor: '#5e72e4',
+          logoUrl: '', announcement: '这是 Argon-Xboard 的本地演示数据。安装到 Xboard 后将自动读取真实账户与订阅信息。',
+          supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题', customHtml: ''
+        }
+      };
+      let dbg = {};
+      try { dbg = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { dbg = {}; }
+      dbg = Object.assign({}, defaults, dbg);
+      dbg.config = Object.assign({}, defaults.config, dbg.config || {});
+
+      // 填充控件
+      document.querySelector(`input[name=dbg_state][value="${dbg.loggedIn ? 'user' : 'guest'}"]`).checked = true;
+      document.querySelector(`input[name=dbg_theme][value="${dbg.colorMode === 'dark' ? 'dark' : 'light'}"]`).checked = true;
+      $('dbg_route').value = dbg.route || 'login';
+      $('dbg_brandName').value = dbg.config.brandName || '';
+      $('dbg_tagline').value = dbg.config.tagline || '';
+      $('dbg_logoUrl').value = dbg.config.logoUrl || '';
+      $('dbg_announcement').value = dbg.config.announcement || '';
+      $('dbg_supportUrl').value = dbg.config.supportUrl || '';
+      $('dbg_footerText').value = dbg.config.footerText || '';
+      $('dbg_customHtml').value = dbg.config.customHtml || '';
+      $('dbg_primaryColor').value = dbg.config.primaryColor || '#5e72e4';
+      $('dbg_primaryColorText').value = dbg.config.primaryColor || '#5e72e4';
+
+      // 主题色实时预览（不重载）
+      function shade(hex, amount) {
+        const value = parseInt(hex.slice(1), 16);
+        const calc = s => Math.max(0, Math.min(255, (value >> s & 255) + amount));
+        return '#' + [16, 8, 0].map(s => calc(s).toString(16).padStart(2, '0')).join('');
+      }
+      function applyColorLive(c) {
+        if (!/^#[0-9a-f]{6}$/i.test(c)) return;
+        const rgb = [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+        document.documentElement.style.setProperty('--primary', c);
+        document.documentElement.style.setProperty('--primary-rgb', rgb.join(', '));
+        document.documentElement.style.setProperty('--primary-strong', shade(c, -14));
+      }
+      function setColor(c) {
+        $('dbg_primaryColor').value = c;
+        $('dbg_primaryColorText').value = c;
+        applyColorLive(c);
+      }
+      $('dbg_primaryColor').addEventListener('input', e => setColor(e.target.value));
+      $('dbg_primaryColorText').addEventListener('input', e => {
+        const v = e.target.value.trim();
+        if (/^#[0-9a-f]{6}$/i.test(v)) { $('dbg_primaryColor').value = v; applyColorLive(v); }
+      });
+
+      // 折叠
+      $('dbg-head').addEventListener('click', () => {
+        const p = $('dbg-panel');
+        p.classList.toggle('hidden');
+        $('dbg-caret').textContent = p.classList.contains('hidden') ? '▸' : '▾';
+      });
+
+      // 应用并重载
+      $('dbg_apply').addEventListener('click', () => {
+        const color = $('dbg_primaryColorText').value.trim();
+        if (!/^#[0-9a-f]{6}$/i.test(color)) { alert('主题色需为 6 位十六进制，例如 #5e72e4'); return; }
+        const next = {
+          loggedIn: document.querySelector('input[name=dbg_state]:checked').value === 'user',
+          route: $('dbg_route').value,
+          colorMode: document.querySelector('input[name=dbg_theme]:checked').value,
+          config: {
+            brandName: $('dbg_brandName').value.trim(),
+            tagline: $('dbg_tagline').value.trim(),
+            primaryColor: color,
+            logoUrl: $('dbg_logoUrl').value.trim(),
+            announcement: $('dbg_announcement').value.trim(),
+            supportUrl: $('dbg_supportUrl').value.trim(),
+            footerText: $('dbg_footerText').value.trim(),
+            customHtml: $('dbg_customHtml').value
+          }
+        };
+        localStorage.setItem(KEY, JSON.stringify(next));
+        localStorage.setItem('nebulax_color_mode', next.colorMode);
+        location.reload();
+      });
+
+      // 重置
+      $('dbg_reset').addEventListener('click', () => {
+        if (!confirm('重置为默认调试配置？')) return;
+        localStorage.removeItem(KEY);
+        location.reload();
+      });
+    })();
+  </script>
+</body>
+</html>
