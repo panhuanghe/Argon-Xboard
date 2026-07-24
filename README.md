@@ -1,8 +1,8 @@
 # Argon-Xboard
 
-基于 [Argon Design System](https://demos.creative-tim.com/argon-dashboard) 视觉语言的 **Xboard 用户端主题**。在已验证可用的 NebulaX 源码基础上重新设计样式：现代渐变、圆角卡片、清晰的信息层级，不绑定固定域名，可部署在根域名或任意子域名。
+基于 [Argon Design System](https://demos.creative-tim.com/argon-dashboard) 视觉语言开发的 **Xboard 用户端主题**。采用现代渐变、圆角卡片与清晰的信息层级，不绑定固定域名，可部署在根域名或任意子域名。
 
-> An Xboard front-end theme styled with the Argon Design System. Built from the verified NebulaX source, featuring modern gradients, rounded cards and a clean hierarchy. No domain binding required.
+> An Xboard front-end theme developed in Argon style, featuring modern gradients, rounded cards and a clean hierarchy. No domain binding required.
 
 ## 界面预览
 
@@ -47,7 +47,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.1.3.zip`](Argon-Xboard-1.1.3.zip)。
+1. 下载安装包 [`Argon-Xboard-1.1.8.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.1.8/Argon-Xboard-1.1.8.zip)。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色与客服地址。
 
@@ -64,7 +64,7 @@ Argon-Xboard/
   preview.html?state=user&route=dashboard&color=%235e72e4
   ```
 
-主题在 `preview.html` 下会自动进入演示模式（`window.NEBULAX_PREVIEW = true`），由 `theme.js` 内置的 `mockApi` 返回模拟数据；部署到 Xboard 后将自动改为读取真实接口。
+主题在 `preview.html` 下会自动进入演示模式，由 `theme.js` 内置的 `mockApi` 返回模拟数据；部署到 Xboard 后将自动改为读取真实接口。
 
 ## 后台配置项
 
@@ -97,4 +97,4 @@ Argon-Xboard/
 
 ## 许可证
 
-基于 NebulaX（Xboard 主题）二次开发，沿用其 MIT 许可。
+本主题以 Argon 风格实现，采用 MIT 许可。
