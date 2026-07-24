@@ -1,7 +1,7 @@
 {
   "name": "Argon-Xboard",
   "description": "基于 Argon Design System 的 Xboard 用户端主题：现代渐变、圆角卡片、清晰的层级结构，无域名绑定",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "images": "",
   "configs": [
     {
