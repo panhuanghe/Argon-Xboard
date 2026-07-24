@@ -7,6 +7,7 @@
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: 'Powered by Argon-Xboard · Xboard'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
+  const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
   const storageKey = 'nebulax_auth_data';
   const themeKey = 'nebulax_color_mode';
   const state = {
@@ -556,77 +557,15 @@
     } catch (error) { renderError(error); }
   }
 
-  function flagStar(cx, cy, r, n, rot) {
-    rot = (rot == null) ? -90 : rot;
-    const inner = r * 0.42;
-    const pts = [];
-    for (let i = 0; i < n * 2; i++) {
-      const a = (Math.PI / n) * i + (rot * Math.PI / 180);
-      const rr = (i % 2 === 0) ? r : inner;
-      pts.push((cx + rr * Math.cos(a)).toFixed(2) + ',' + (cy + rr * Math.sin(a)).toFixed(2));
-    }
-    return pts.join(' ');
-  }
-
-  function flagSvg(code) {
-    const f = {
-      CN: `<rect width="30" height="20" fill="#de2910"/><polygon points="${flagStar(6,5.5,3,5)}" fill="#ffde00"/><polygon points="${flagStar(11,2.5,1,5)}" fill="#ffde00"/><polygon points="${flagStar(12.5,4.8,1,5)}" fill="#ffde00"/><polygon points="${flagStar(12,7.5,1,5)}" fill="#ffde00"/><polygon points="${flagStar(9.5,8.8,1,5)}" fill="#ffde00"/>`,
-      HK: `<rect width="30" height="20" fill="#de2910"/><g fill="#ffffff">${[0,1,2,3,4].map(i=>{const a=(-90+i*72)*Math.PI/180;return `<circle cx="${(15+5*Math.cos(a)).toFixed(1)}" cy="${(10+5*Math.sin(a)).toFixed(1)}" r="2.3"/>`}).join('')}<circle cx="15" cy="10" r="1.5"/></g>`,
-      TW: `<rect width="30" height="20" fill="#fe0000"/><rect x="0" y="0" width="15" height="10" fill="#000095"/><polygon points="${flagStar(7.5,5,4.2,12)}" fill="#ffffff"/>`,
-      MO: `<rect width="30" height="20" fill="#009b3a"/><g fill="#ffffff">${[0,1,2,3,4].map(i=>{const a=(-90+i*72)*Math.PI/180;return `<circle cx="${(15+3.4*Math.cos(a)).toFixed(1)}" cy="${(10+3.4*Math.sin(a)).toFixed(1)}" r="1.7"/>`}).join('')}<circle cx="15" cy="10" r="1.1"/></g><polygon points="${flagStar(22,6,1.4,5)}" fill="#ffff00"/>`,
-      JP: `<rect width="30" height="20" fill="#ffffff"/><circle cx="15" cy="10" r="6" fill="#bc002d"/>`,
-      US: `<rect width="30" height="20" fill="#ffffff"/>${[0,1,2,3,4,5,6,7,8,9,10,11,12].map(i=>`<rect y="${(i*20/13).toFixed(2)}" width="30" height="${(20/13).toFixed(2)}" fill="${i%2?'#ffffff':'#b22234'}"/>`).join('')}<rect width="14" height="11" fill="#3c3b6e"/><polygon points="${flagStar(7,5.5,2.6,5)}" fill="#ffffff"/>`,
-      SG: `<rect width="30" height="20" fill="#ffffff"/><rect width="30" height="10" fill="#ef3340"/><path d="M5 10 a5 5 0 1 0 10 0 a4 4 0 1 1 -10 0" fill="#ffffff"/><g fill="#ffffff">${[0,1,2,3,4].map(i=>`<polygon points="${flagStar(18+i*2.6,4.5,1,5)}"/>`).join('')}</g>`,
-      KR: `<rect width="30" height="20" fill="#ffffff"/><g transform="translate(15,10)"><circle r="6" fill="#ffffff"/><path d="M-6 0 A6 6 0 0 1 6 0 Z" fill="#cd2e3a"/><path d="M-6 0 A6 6 0 0 0 6 0 Z" fill="#0047a0"/></g>${[0,1,2,3].map(i=>{const x=[6,24,6,24][i],y=[5,5,15,15][i];return `<g transform="translate(${x},${y})"><rect x="-0.6" y="-3" width="1.2" height="6" fill="#000000"/><rect x="-3" y="-0.6" width="6" height="1.2" fill="#000000"/><rect x="-2.2" y="-2.2" width="1.2" height="1.2" fill="#000000"/><rect x="1" y="-2.2" width="1.2" height="1.2" fill="#000000"/><rect x="-2.2" y="1" width="1.2" height="1.2" fill="#000000"/><rect x="1" y="1" width="1.2" height="1.2" fill="#000000"/></g>`}).join('')}`,
-      GB: `<rect width="30" height="20" fill="#012169"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#ffffff" stroke-width="4"/><path d="M0 0 L30 20 M30 0 L0 20" stroke="#c8102e" stroke-width="2"/><rect x="13" width="4" height="20" fill="#ffffff"/><rect y="8" width="30" height="4" fill="#ffffff"/><rect x="14" width="2" height="20" fill="#c8102e"/><rect y="9" width="30" height="2" fill="#c8102e"/>`,
-      DE: `<rect width="30" height="6.7" y="0" fill="#000000"/><rect width="30" height="6.7" y="6.7" fill="#dd0000"/><rect width="30" height="6.7" y="13.3" fill="#ffce00"/>`,
-      FR: `<rect width="10" height="20" fill="#0055a4"/><rect x="10" width="10" height="20" fill="#ffffff"/><rect x="20" width="10" height="20" fill="#ef4135"/>`,
-      CA: `<rect width="5" height="20" fill="#ff0000"/><rect x="5" width="20" height="20" fill="#ffffff"/><rect x="25" width="5" height="20" fill="#ff0000"/><polygon points="${flagStar(15,10,4,11)}" fill="#ff0000"/>`,
-      AU: `<rect width="30" height="20" fill="#00247d"/><rect width="15" height="10" fill="#012169"/><path d="M0 0 L15 10 M15 0 L0 10" stroke="#ffffff" stroke-width="2"/><rect width="6.5" height="3" fill="#ffffff"/><rect x="0" width="3" height="6.5" fill="#ffffff"/><polygon points="${flagStar(7.5,5,1.5,5)}" fill="#ffffff"/><polygon points="${flagStar(22,6,1.6,7)}" fill="#ffffff"/><g fill="#ffffff">${[[24,3],[27,7],[23,11],[27,13],[20,9]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="0.8"/>`).join('')}</g>`,
-      RU: `<rect width="30" height="6.7" y="0" fill="#ffffff"/><rect width="30" height="6.7" y="6.7" fill="#0039a6"/><rect width="30" height="6.7" y="13.3" fill="#d52b1e"/>`,
-      IN: `<rect width="30" height="6.7" y="0" fill="#ff9933"/><rect width="30" height="6.7" y="6.7" fill="#ffffff"/><rect width="30" height="6.7" y="13.3" fill="#138808"/><circle cx="15" cy="10" r="2.4" fill="none" stroke="#000080" stroke-width="0.6"/>`,
-      BR: `<rect width="30" height="20" fill="#009b3a"/><polygon points="15,2 28,10 15,18 2,10" fill="#ffdf00"/><circle cx="15" cy="10" r="5" fill="#002776"/><path d="M11 10 q4 -3 8 0" stroke="#ffffff" stroke-width="1" fill="none"/>`,
-      NL: `<rect width="30" height="6.7" y="0" fill="#ae1c28"/><rect width="30" height="6.7" y="6.7" fill="#ffffff"/><rect width="30" height="6.7" y="13.3" fill="#21468b"/>`,
-      TR: `<rect width="30" height="20" fill="#e30a17"/><circle cx="13" cy="10" r="6" fill="#ffffff"/><circle cx="15" cy="10" r="5" fill="#e30a17"/><polygon points="${flagStar(22,10,2.6,5)}" fill="#ffffff"/>`,
-      VN: `<rect width="30" height="20" fill="#da251d"/><polygon points="${flagStar(15,10,5,5)}" fill="#ffff00"/>`,
-      TH: `<rect width="30" height="3.3" y="0" fill="#a5192f"/><rect width="30" height="3.3" y="3.3" fill="#f4f5f8"/><rect width="30" height="6.8" y="6.6" fill="#2d2a8c"/><rect width="30" height="3.3" y="13.4" fill="#f4f5f8"/><rect width="30" height="3.3" y="16.7" fill="#a5192f"/>`,
-      MY: `<rect width="30" height="20" fill="#ffffff"/>${[0,2,4,6,8,10,12].map(i=>`<rect y="${(i*20/14).toFixed(2)}" width="30" height="${(20/14).toFixed(2)}" fill="${i%2?'#ffffff':'#cc0000'}"/>`).join('')}<rect width="15" height="10" fill="#010066"/><path d="M3.5 5 a3.2 3.2 0 1 0 6.4 0 a2.4 2.4 0 1 1 -6.4 0" fill="#ffcc00"/><polygon points="${flagStar(11,5,1.6,5)}" fill="#ffcc00"/>`,
-      PH: `<polygon points="0,0 0,20 15,10" fill="#ffffff"/><rect x="15" width="15" height="10" fill="#0038a8"/><rect y="10" width="30" height="10" fill="#ce1126"/><polygon points="${flagStar(7,10,2.4,5)}" fill="#ffcc00"/>`,
-      ID: `<rect width="30" height="10" y="0" fill="#ce1126"/><rect width="30" height="10" y="10" fill="#ffffff"/>`,
-      UN: `<rect width="30" height="20" fill="#418fde"/><circle cx="15" cy="10" r="6" fill="#ffffff"/><path d="M9 10 H21 M15 4 V16" stroke="#418fde" stroke-width="0.5"/><path d="M11 10 a4 4 0 0 1 8 0" stroke="#418fde" stroke-width="0.4" fill="none"/>`
-    };
-    return `<svg viewBox="0 0 30 20" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%">${f[code] || f.UN}</svg>`;
-  }
-
+  // Region flag keyword matching copied from Bob-Theme-Argon (metron assets).
+  // Reference repo: https://github.com/BobCoderS9/Bob-Theme-Argon
   function regionFlag(node) {
-    const name = String((node && (node.name || node.server_name || node.region || '')) || '').toLowerCase();
-    const map = [
-      [/hk|hong ?kong|香港/, 'HK'],
-      [/tw|taiwan|台湾/, 'TW'],
-      [/mo|macau|澳門|澳门/, 'MO'],
-      [/jp|japan|日本/, 'JP'],
-      [/us|usa?|united states|america|美国|洛杉矶|硅谷|纽约/, 'US'],
-      [/sg|singapore|新加坡/, 'SG'],
-      [/kr|korea|韩国|首尔/, 'KR'],
-      [/gb|uk|united kingdom|england|britain|英国|伦敦/, 'GB'],
-      [/de|germany|德国|法兰克福/, 'DE'],
-      [/fr|france|法国|巴黎/, 'FR'],
-      [/ca|canada|加拿大|多伦多/, 'CA'],
-      [/au|australia|澳洲|澳大利亚|悉尼|墨尔本/, 'AU'],
-      [/ru|russia|俄罗斯|莫斯科/, 'RU'],
-      [/in|india|印度/, 'IN'],
-      [/br|brazil|巴西/, 'BR'],
-      [/nl|netherlands|荷兰/, 'NL'],
-      [/tr|turkey|土耳其|伊斯坦布尔/, 'TR'],
-      [/vn|vietnam|越南/, 'VN'],
-      [/th|thailand|泰国|曼谷/, 'TH'],
-      [/my|malaysia|马来西亚/, 'MY'],
-      [/ph|philippines|菲律宾/, 'PH'],
-      [/id|indonesia|印尼|印度尼西亚/, 'ID'],
-      [/cn|china|中国|大陆|广东|上海|北京/, 'CN']
-    ];
-    for (const [re, code] of map) if (re.test(name)) return { svg: flagSvg(code), region: code };
-    return { svg: flagSvg('UN'), region: 'UN' };
+    const name = String((node && (node.name || node.server_name || node.region || '')) || '');
+    const keywords = ['香港','美国','日本','中国','俄罗斯','韩国','英国','新加坡','马来西亚',
+                      '台湾','加拿大','菲律宾','德国','印度','南非','卢森堡','巴西','意大利',
+                      '法国','泰国','爱尔兰'];
+    for (const kw of keywords) if (name.indexOf(kw) !== -1) return kw;
+    return 'un';
   }
 
   async function renderNodes(id) {
@@ -636,7 +575,7 @@
       if (id !== state.renderId) return;
       state.nodes = Array.isArray(result) ? result : (result?.data || []);
       const online = state.nodes.filter(node => Boolean(node.is_online)).length;
-      const cards = state.nodes.map(node => { const flag = regionFlag(node); return `<article class="card node-card ${node.is_online ? '' : 'offline'}"><div class="node-card-top"></div><div class="node-card-body"><div class="node-head"><span class="node-flag" title="${e(flag.region)}">${flag.svg}</span><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></div></article>`; }).join('');
+      const cards = state.nodes.map(node => { const kw = regionFlag(node); return `<article class="card node-card ${node.is_online ? '' : 'offline'}"><div class="node-card-top"></div><div class="node-card-body"><div class="node-head"><img class="node-flag" src="${ASSETS_BASE}/flags/1x1_zh_cn/${e(kw)}.svg" alt="${e(kw)}" title="${e(kw)}"><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></div></article>`; }).join('');
       app.innerHTML = shell(`${pageHead('Network', '节点状态', `${online} / ${state.nodes.length} 个节点在线，状态会随服务端检测更新。`)}<div class="node-grid">${cards || empty('暂无可用节点', '当前套餐没有可展示的节点。')}</div>`, '节点状态');
     } catch (error) { renderError(error); }
   }
@@ -689,7 +628,7 @@
       state.user = user;
       const content = `${pageHead('Account', '个人中心', '你的账户资料与常用操作。')}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>加入于 ${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>账户余额</span><b>${money(user.balance)}</b></div><div class="info-item"><span>套餐编号</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>到期时间</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>账户状态</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? '已停用' : '正常'}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.4</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
+        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.5</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
         <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>安全设置</h2><p>定期更换密码可以保护账户安全</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">当前密码</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="请输入当前密码"></div><div class="form-row"><div class="field"><label for="new_password">新密码</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="至少 8 位字符"></div><div class="field"><label for="new_password_confirmation">确认新密码</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="再次输入新密码"></div></div><button class="btn btn-primary" type="submit">修改密码</button></form></section>`;
       app.innerHTML = shell(content, '个人中心');
     } catch (error) { renderError(error); }

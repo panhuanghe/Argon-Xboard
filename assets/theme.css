@@ -433,5 +433,4 @@ img { max-width: 100%; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-.node-flag { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.08); }
-.node-flag svg { display: block; width: 100%; height: 100%; }
+.node-flag { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.08); object-fit: cover; display: block; }

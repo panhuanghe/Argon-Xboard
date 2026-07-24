@@ -178,6 +178,7 @@
         supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题'
       }, dbg.config || {});
       window.NEBULAX_PREVIEW = true;
+      window.XBOARD_ASSETS = './assets';
       window.XBOARD_THEME = config;
       if (dbg.loggedIn) localStorage.setItem('nebulax_auth_data', 'Bearer preview-token');
       else localStorage.removeItem('nebulax_auth_data');
