@@ -201,6 +201,22 @@
     const stamp = Number(value) < 1e12 ? Number(value) * 1000 : Number(value);
     return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(stamp));
   }
+  function daysUntil(value) {
+    if (!value) return null;
+    const stamp = Number(value) < 1e12 ? Number(value) * 1000 : Number(value);
+    const diff = Math.ceil((stamp - Date.now()) / 86400000);
+    return diff > 0 ? diff : 0;
+  }
+  function daysUntilReset(resetDay) {
+    if (!resetDay) return null;
+    const now = new Date();
+    const currentDay = now.getDate();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    let target = new Date(currentYear, currentMonth, Number(resetDay));
+    if (currentDay > Number(resetDay)) target = new Date(currentYear, currentMonth + 1, Number(resetDay));
+    return Math.ceil((target - now) / 86400000);
+  }
   function toast(message, type = 'success', title = type === 'error' ? '操作失败' : '操作成功') {
     const node = document.createElement('div');
     node.className = `toast ${type}`;
@@ -350,6 +366,11 @@
       const percent = total ? Math.min(100, Math.round(used / total * 100)) : 0;
       const remaining = Math.max(0, total - used);
       const planName = subscribe.plan?.name || '暂无订阅';
+      const expireDays = daysUntil(subscribe.expired_at);
+      const resetDays = daysUntilReset(subscribe.reset_day);
+      const expireMeta = subscribe.expired_at
+        ? `于 ${date(subscribe.expired_at)} 到期，距离到期还有 ${expireDays} 天${resetDays !== null ? `，${resetDays} 日后重置流量` : ''}`
+        : '暂无有效订阅';
       const firstName = (user.email || '用户').split('@')[0];
       const announcement = config.announcement || state.notices[0]?.content || '';
       const content = `<div class="dashboard-header">
@@ -370,18 +391,17 @@
         ${statCard('wallet', money(user.balance), '账户余额', 'bg-gradient-warning')}
       </div>
       <div class="grid grid-3" style="margin-top:24px">
-        <section class="card span-2">
-          <div class="card-header">
-            <div><h2>流量使用</h2><p>上传与下载流量合计</p></div>
-            <span class="status ${percent > 85 ? 'danger' : 'success'}">已使用 ${percent}%</span>
-          </div>
+        <section class="card span-2 subscription-card">
           <div class="card-body">
-            <div class="progress"><span style="width:${percent}%"></span></div>
-            <div class="usage-metrics">
-              <div class="metric"><span>已用流量</span><b>${bytes(used)}</b></div>
-              <div class="metric"><span>套餐总量</span><b>${bytes(total)}</b></div>
-              <div class="metric"><span>剩余流量</span><b>${bytes(remaining)}</b></div>
+            <h2 class="subscription-title">我的订阅</h2>
+            <h3 class="subscription-plan-name">${e(planName)}</h3>
+            <p class="subscription-meta">${e(expireMeta)}</p>
+            <div class="subscription-progress-row">
+              <span class="subscription-tag">已用流量</span>
+              <span class="subscription-percent">${percent}%</span>
             </div>
+            <div class="progress subscription-progress"><span style="width:${percent}%"></span></div>
+            <p class="subscription-usage">已用 ${bytes(used)} / 总计 ${bytes(total)}</p>
           </div>
         </section>
         <section class="card subscribe-card">

@@ -243,6 +243,17 @@ img { max-width: 100%; }
 .subscribe-box { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); }
 .subscribe-url { min-width: 0; flex: 1; overflow: hidden; color: var(--body); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 
+.subscription-card .card-body { display: grid; gap: 14px; padding: 28px; }
+.subscription-title { margin: 0; font-size: 16px; color: var(--ink); font-weight: 700; }
+.subscription-plan-name { margin: 0; font-size: 24px; color: var(--ink); font-weight: 700; letter-spacing: -.02em; }
+.subscription-meta { margin: 0; color: var(--muted); font-size: 13px; }
+.subscription-progress-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.subscription-tag { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 999px; color: var(--primary); background: rgba(var(--primary-rgb), .12); font-size: 11px; font-weight: 700; }
+.subscription-percent { font-size: 22px; color: var(--ink); font-weight: 600; }
+.subscription-progress { height: 10px; margin-top: -4px; }
+.subscription-progress span { background: linear-gradient(90deg, var(--primary), #825ee4); }
+.subscription-usage { margin: 0; color: var(--muted); font-size: 13px; }
+
 .announcement { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; margin-bottom: 24px; border-radius: var(--radius); background: linear-gradient(135deg, rgba(var(--primary-rgb), .08), rgba(17, 205, 239, .05)); border: 1px solid rgba(var(--primary-rgb), .12); }
 .announcement .icon { color: var(--primary); flex: 0 0 auto; }
 .announcement p { margin: 0; color: var(--body); font-size: 13px; line-height: 1.6; }
