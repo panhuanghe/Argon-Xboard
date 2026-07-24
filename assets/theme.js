@@ -272,7 +272,7 @@
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
-        <nav class="nav" aria-label=t('nav_main')>
+        <nav class="nav" aria-label="${t('nav_main')}">
           ${nav('dashboard', t('nav_dashboard'), 'dashboard')}
           ${nav('docs', t('nav_docs'), 'docs')}
           <p class="nav-label">${t('nav_subscription')}</p>
@@ -472,8 +472,8 @@
         ${statCard('calendar', date(subscribe.expired_at), t('subscribe_expire'), 'bg-gradient-info')}
         ${statCard('wallet', money(user.balance), t('account_balance'), 'bg-gradient-warning')}
       </div>
-      <div class="grid grid-3" style="margin-top:24px">
-        <section class="card span-2 subscription-card">
+      <div class="grid dashboard-main-grid" style="margin-top:24px">
+        <section class="card subscription-card">
           <div class="card-body">
             <h2 class="subscription-title">${t('my_subscribe')}</h2>
             <h3 class="subscription-plan-name">${e(planName)}</h3>
@@ -632,14 +632,37 @@
     } catch (error) { renderError(error); }
   }
 
-  // Region flag keyword matching copied from Bob-Theme-Argon (metron assets).
-  // Reference repo: https://github.com/BobCoderS9/Bob-Theme-Argon
+  // Region flag resolver (based on Bob-Theme-Argon node naming habits).
+  // Returns ASCII file codes to avoid non-ASCII filename compatibility issues on some servers.
   function regionFlag(node) {
-    const name = String((node && (node.name || node.server_name || node.region || '')) || '');
-    const keywords = ['香港','美国','日本','中国','俄罗斯','韩国','英国','新加坡','马来西亚',
-                      '台湾','加拿大','菲律宾','德国','印度','南非','卢森堡','巴西','意大利',
-                      '法国','泰国','爱尔兰'];
-    for (const kw of keywords) if (name.indexOf(kw) !== -1) return kw;
+    const raw = String((node && (node.name || node.server_name || node.region || '')) || '');
+    const name = raw.toLowerCase();
+    const map = [
+      ['hk', /(香港|hong\s*kong|\bhk\b)/i],
+      ['us', /(美国|美國|united\s*states|\busa\b|\bus\b)/i],
+      ['jp', /(日本|japan|\bjp\b)/i],
+      ['cn', /(中国|中國|china|\bcn\b)/i],
+      ['ru', /(俄罗斯|俄羅斯|russia|\bru\b)/i],
+      ['kr', /(韩国|韓國|korea|\bkr\b)/i],
+      ['gb', /(英国|英國|uk|united\s*kingdom|great\s*britain|\bgb\b)/i],
+      ['sg', /(新加坡|singapore|\bsg\b)/i],
+      ['my', /(马来西亚|馬來西亞|malaysia|\bmy\b)/i],
+      ['tw', /(台湾|台灣|taiwan|\btw\b)/i],
+      ['ca', /(加拿大|canada|\bca\b)/i],
+      ['ph', /(菲律宾|菲律賓|philippines|\bph\b)/i],
+      ['de', /(德国|德國|germany|\bde\b)/i],
+      ['in', /(印度|india|\bin\b)/i],
+      ['za', /(南非|south\s*africa|\bza\b)/i],
+      ['lu', /(卢森堡|盧森堡|luxembourg|\blu\b)/i],
+      ['br', /(巴西|brazil|\bbr\b)/i],
+      ['it', /(意大利|italy|\bit\b)/i],
+      ['fr', /(法国|法國|france|\bfr\b)/i],
+      ['th', /(泰国|泰國|thailand|\bth\b)/i],
+      ['ie', /(爱尔兰|愛爾蘭|ireland|\bie\b)/i]
+    ];
+    for (const [code, matcher] of map) {
+      if (matcher.test(name)) return code;
+    }
     return 'un';
   }
 
@@ -650,7 +673,7 @@
       if (id !== state.renderId) return;
       state.nodes = Array.isArray(result) ? result : (result?.data || []);
       const online = state.nodes.filter(node => Boolean(node.is_online)).length;
-      const cards = state.nodes.map(node => { const kw = regionFlag(node); return `<article class="card node-card ${node.is_online ? '' : 'offline'}"><div class="node-card-top"></div><div class="node-card-body"><div class="node-head"><img class="node-flag" src="${ASSETS_BASE}/flags/1x1_zh_cn/${e(kw)}.svg" alt="${e(kw)}" title="${e(kw)}"><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></div></article>`; }).join('');
+      const cards = state.nodes.map(node => { const kw = regionFlag(node); return `<article class="card node-card ${node.is_online ? '' : 'offline'}"><div class="node-card-top"></div><div class="node-card-body"><div class="node-head"><img class="node-flag" src="${ASSETS_BASE}/flags/1x1_zh_cn/${e(kw)}.svg" alt="${e(kw)}" title="${e(kw)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${ASSETS_BASE}/flags/1x1_zh_cn/un.svg';"><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></div></article>`; }).join('');
       app.innerHTML = shell(`${pageHead('Network', '节点状态', `${online} / ${state.nodes.length} 个节点在线，状态会随服务端检测更新。`)}<div class="node-grid">${cards || empty('暂无可用节点', '当前套餐没有可展示的节点。')}</div>`, '节点状态');
     } catch (error) { renderError(error); }
   }
