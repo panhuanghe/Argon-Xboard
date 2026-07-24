@@ -187,7 +187,9 @@ img { max-width: 100%; }
 .topbar-title span { color: var(--muted); font-size: 12px; }
 .topbar-actions { display: flex; align-items: center; gap: 10px; }
 .icon-btn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); color: var(--body); cursor: pointer; }
+.icon-btn { position: relative; }
 .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
+.icon-btn.has-notify::after { content: ""; position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--surface); }
 .avatar { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, var(--primary), #825ee4); font-size: 12px; font-weight: 700; }
 .mobile-brand, .mobile-nav { display: none; }
 .content { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px; }
@@ -259,9 +261,12 @@ img { max-width: 100%; }
 .announcement p { margin: 0; color: var(--body); font-size: 13px; line-height: 1.6; }
 
 .plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
-.plan-card { position: relative; display: flex; flex-direction: column; min-height: 400px; padding: 28px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
-.plan-card.featured { border: 2px solid var(--primary); }
-.plan-card.featured::before { content: "推荐"; position: absolute; top: 12px; right: -32px; width: 120px; padding: 5px 0; transform: rotate(45deg); color: #fff; background: var(--primary); text-align: center; font-size: 10px; font-weight: 800; }
+.plan-card { position: relative; display: flex; flex-direction: column; min-height: 400px; padding: 0; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.plan-card-top { height: 8px; background: linear-gradient(90deg, var(--primary), #825ee4); }
+.plan-card-body { display: flex; flex-direction: column; flex: 1; padding: 28px; }
+.plan-card.featured { box-shadow: 0 0.5rem 2rem rgba(var(--primary-rgb), .18); }
+.plan-card.featured .plan-card-top { background: linear-gradient(90deg, #825ee4, var(--primary)); }
+.plan-card.featured::before { content: "推荐"; position: absolute; top: 14px; right: -36px; width: 130px; padding: 5px 0; transform: rotate(45deg); color: #fff; background: linear-gradient(135deg, var(--primary), #825ee4); text-align: center; font-size: 10px; font-weight: 800; box-shadow: 0 4px 12px rgba(var(--primary-rgb), .2); }
 .plan-name { margin: 0; font-size: 22px; color: var(--ink); }
 .plan-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; min-height: 27px; }
 .tag, .status { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
@@ -283,6 +288,8 @@ img { max-width: 100%; }
 .table { width: 100%; border-collapse: collapse; }
 .table th { padding: 14px 16px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--line); }
 .table td { padding: 16px; color: var(--body); font-size: 13px; border-bottom: 1px solid var(--line); }
+.table tbody tr { transition: background .15s; }
+.table tbody tr:hover { background: var(--surface-soft); }
 .table tr:last-child td { border-bottom: 0; }
 .table td strong { color: var(--ink); }
 .table-link { padding: 0; background: none; border: 0; text-align: left; cursor: pointer; color: var(--body); }
@@ -324,7 +331,10 @@ img { max-width: 100%; }
 .doc-info small { color: var(--muted); font-size: 12px; }
 
 .node-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.node-card { padding: 24px; }
+.node-card { padding: 0; overflow: hidden; }
+.node-card-top { height: 6px; background: linear-gradient(90deg, var(--primary), #825ee4); }
+.node-card.offline .node-card-top { background: linear-gradient(90deg, var(--danger), #f56036); }
+.node-card-body { padding: 24px; }
 .node-head { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 .node-head > div { min-width: 0; flex: 1; }
 .node-head h2 { overflow: hidden; margin: 0; font-size: 15px; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }

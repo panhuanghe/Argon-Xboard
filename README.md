@@ -6,9 +6,13 @@
 
 ## 界面预览
 
-| 登录页（游客态） | 仪表盘（已登录） | 使用文档 |
-| --- | --- | --- |
-| ![登录页](screenshots/login.png) | ![仪表盘](screenshots/dashboard.png) | ![使用文档](screenshots/docs.png) |
+| 登录页 | 仪表盘 | 节点列表 | 购买订阅 |
+| --- | --- | --- | --- |
+| ![登录页](screenshots/login.png) | ![仪表盘](screenshots/dashboard.png) | ![节点列表](screenshots/nodes.png) | ![购买订阅](screenshots/plans.png) |
+
+| 我的订单 | 我的工单 | 流量明细 | 个人中心 |
+| --- | --- | --- | --- |
+| ![我的订单](screenshots/orders.png) | ![我的工单](screenshots/tickets.png) | ![流量明细](screenshots/traffic.png) | ![个人中心](screenshots/account.png) |
 
 ## 特性
 
@@ -16,10 +20,14 @@
 - 用户仪表盘、「我的订阅」卡片（套餐 / 到期倒计时 / 重置倒计时 / 流量进度）
 - 使用文档（渐变头部 + 关键字搜索 + 分类卡片 + 查看详情侧栏）
 - 订阅链接一键复制与一键重置（调用 `/api/v1/user/resetSecurity`）
-- 套餐选择、创建订单与基础支付跳转
-- 订单列表、取消待支付订单
-- 邀请码与返佣统计、工单创建和回复
-- 个人中心、客服入口、深 / 浅色模式
+- 套餐选择（渐变卡片 + 推荐标签）、创建订单与基础支付跳转
+- 订单列表（统计卡 + 表格）、取消待支付订单
+- 邀请码与返佣统计
+- 节点状态（彩色顶部条区分在线 / 维护）
+- 工单列表（统计卡 + 新回复状态）、工单创建和回复
+- 流量明细（每日用量条形图）
+- 个人中心（修改密码）、客服入口、深 / 浅色模式
+- 顶部铃铛：有处理中 / 新回复工单时显示红点，点击直达工单页
 - 桌面端与移动端响应式布局
 - API 始终使用同源 `/api/v1`，不绑定固定域名
 - 内置演示模式（`preview.html`），无需后端即可查看界面与交互
@@ -39,7 +47,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.1.2.zip`](Argon-Xboard-1.1.2.zip)。
+1. 下载安装包 [`Argon-Xboard-1.1.3.zip`](Argon-Xboard-1.1.3.zip)。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色与客服地址。
 

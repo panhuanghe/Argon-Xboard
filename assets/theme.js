@@ -171,6 +171,7 @@
       : path.includes('/ticket/save') || path.includes('/ticket/reply') || path.includes('/ticket/close') ? true
       : path.includes('/stat/getTrafficLog') ? [{ d: 3.4 * 1024 ** 3, u: .8 * 1024 ** 3, record_at: now - 86400 * 2, server_rate: 1 }, { d: 6.2 * 1024 ** 3, u: 1.1 * 1024 ** 3, record_at: now - 86400, server_rate: 1.2 }, { d: 2.8 * 1024 ** 3, u: .5 * 1024 ** 3, record_at: now, server_rate: 1 }]
       : path.includes('/resetSecurity') ? true
+      : path.includes('/changePassword') ? true
       : true;
     return new Promise(resolve => setTimeout(() => resolve(data), 180));
   }
@@ -230,20 +231,25 @@
     return `<a class="nav-link${active}" href="#/${route}" data-nav="${route}">${icon(iconName)}<span>${label}</span></a>`;
   }
 
+  function hasTicketNotify() {
+    return Array.isArray(state.tickets) && state.tickets.some(t => Number(t.status) === 0 || Number(t.reply_status) === 1);
+  }
+
   function shell(content, title, subtitle = '') {
     const user = state.user || {};
+    const notify = hasTicketNotify() ? ' has-notify' : '';
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
         <nav class="nav" aria-label="主导航">
           ${nav('dashboard', '仪表盘', 'dashboard')}
           ${nav('docs', '使用文档', 'docs')}
+          <p class="nav-label">订阅</p>
+          ${nav('nodes', '节点列表', 'nodes')}
+          ${nav('plans', '购买订阅', 'plans')}
           <p class="nav-label">财务</p>
           ${nav('orders', '我的订单', 'orders')}
           ${nav('invites', '我的邀请', 'invite')}
-          <p class="nav-label">订阅</p>
-          ${nav('plans', '购买订阅', 'plans')}
-          ${nav('nodes', '节点状态', 'nodes')}
           <p class="nav-label">用户</p>
           ${nav('account', '个人中心', 'user')}
           ${nav('tickets', '我的工单', 'ticket')}
@@ -260,7 +266,7 @@
           <div class="topbar-title"><strong>${e(title)}</strong><span>${e(subtitle || config.tagline)}</span></div>
           <div class="topbar-actions">
             <button class="icon-btn" data-action="theme" aria-label="切换深浅色">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn" data-nav="dashboard" aria-label="查看通知">${icon('bell')}</button>
+            <button class="icon-btn${notify}" data-action="go-tickets" aria-label="查看通知">${icon('bell')}</button>
             <a class="avatar" href="#/account" title="${e(user.email || '')}">${e(initials(user.email))}</a>
           </div>
         </header>
@@ -444,10 +450,13 @@
     const first = prices[0];
     const tags = Array.isArray(plan.tags) ? plan.tags : [];
     return `<article class="card plan-card ${featured ? 'featured' : ''}">
-      <h2 class="plan-name">${e(plan.name)}</h2><div class="plan-tags">${tags.map(tag => `<span class="tag">${e(tag)}</span>`).join('')}</div>
-      <div class="plan-price">${first ? `<b>${money(plan[first])}</b><span> / ${e(periodMap[first])}</span>` : '<b>—</b>'}</div>
-      <ul class="plan-features"><li>${icon('check')} ${e(plan.transfer_enable || 0)} GB 套餐流量</li><li>${icon('check')} ${plan.speed_limit ? `${e(plan.speed_limit)} Mbps` : '不限速'} 网络</li><li>${icon('check')} ${plan.device_limit ? `${e(plan.device_limit)} 台设备` : '不限设备'}</li><li>${icon('check')} ${e(plan.content || '稳定线路与便捷订阅')}</li></ul>
-      <button class="btn ${featured ? 'btn-primary' : 'btn-secondary'}" data-action="purchase" data-plan="${e(plan.id)}" ${plan.sell === false || !prices.length ? 'disabled' : ''}>选择该方案 ${icon('arrow')}</button>
+      <div class="plan-card-top"></div>
+      <div class="plan-card-body">
+        <h2 class="plan-name">${e(plan.name)}</h2><div class="plan-tags">${tags.map(tag => `<span class="tag">${e(tag)}</span>`).join('')}</div>
+        <div class="plan-price">${first ? `<b>${money(plan[first])}</b><span> / ${e(periodMap[first])}</span>` : '<b>—</b>'}</div>
+        <ul class="plan-features"><li>${icon('check')} ${e(plan.transfer_enable || 0)} GB 套餐流量</li><li>${icon('check')} ${plan.speed_limit ? `${e(plan.speed_limit)} Mbps` : '不限速'} 网络</li><li>${icon('check')} ${plan.device_limit ? `${e(plan.device_limit)} 台设备` : '不限设备'}</li><li>${icon('check')} ${e(plan.content || '稳定线路与便捷订阅')}</li></ul>
+        <button class="btn ${featured ? 'btn-primary' : 'btn-secondary'}" data-action="purchase" data-plan="${e(plan.id)}" ${plan.sell === false || !prices.length ? 'disabled' : ''}>选择该方案 ${icon('arrow')}</button>
+      </div>
     </article>`;
   }
 
@@ -457,11 +466,19 @@
       const orders = await api('/user/order/fetch');
       if (id !== state.renderId) return;
       state.orders = Array.isArray(orders) ? orders : [];
+      const totalPaid = state.orders.filter(o => Number(o.status) === 2).reduce((s, o) => s + Number(o.total_amount || 0), 0);
+      const pendingCount = state.orders.filter(o => Number(o.status) === 0).length;
       const rows = state.orders.map(order => {
         const status = orderStatus[order.status] || ['未知', 'warning'];
         return `<tr><td><strong>${e(order.plan?.name || '订阅套餐')}</strong><br><small>${e(order.trade_no || '')}</small></td><td>${e(periodMap[order.period] || order.period || '—')}</td><td>${money(order.total_amount)}</td><td>${date(order.created_at)}</td><td><span class="status ${status[1]}">${status[0]}</span></td><td>${Number(order.status) === 0 ? `<button class="btn btn-ghost btn-sm" data-action="cancel-order" data-trade="${e(order.trade_no)}">取消</button>` : '—'}</td></tr>`;
       }).join('');
       const content = `${pageHead('Billing', '我的订单', '购买记录、支付状态和套餐信息都在这里。', '<a class="btn btn-primary" href="#/plans">购买套餐</a>')}
+        <div class="grid grid-4" style="margin-bottom:24px">
+          ${statCard('orders', state.orders.length, '累计订单', 'bg-gradient-info')}
+          ${statCard('wallet', money(totalPaid), '已支付金额', 'bg-gradient-success')}
+          ${statCard('calendar', pendingCount, '待支付订单', 'bg-gradient-warning')}
+          ${statCard('chart', state.orders.filter(o => Number(o.status) === 2).length, '已完成订单', 'bg-gradient-primary')}
+        </div>
         <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>订单</th><th>周期</th><th>金额</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有订单', '选择一个套餐后，订单会显示在这里。')}</section>`;
       app.innerHTML = shell(content, '我的订单');
     } catch (error) { renderError(error); }
@@ -546,7 +563,7 @@
       if (id !== state.renderId) return;
       state.nodes = Array.isArray(result) ? result : (result?.data || []);
       const online = state.nodes.filter(node => Boolean(node.is_online)).length;
-      const cards = state.nodes.map(node => `<article class="card node-card"><div class="node-head"><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></article>`).join('');
+      const cards = state.nodes.map(node => `<article class="card node-card ${node.is_online ? '' : 'offline'}"><div class="node-card-top"></div><div class="node-card-body"><div class="node-head"><span class="node-dot ${node.is_online ? 'online' : ''}"></span><div><h2>${e(node.name)}</h2><p>${e(String(node.type || '').toUpperCase())}</p></div><span class="status ${node.is_online ? 'success' : 'danger'}">${node.is_online ? '在线' : '维护中'}</span></div><div class="info-list"><div class="info-item"><span>流量倍率</span><b>${e(node.rate || 1)}×</b></div><div class="info-item"><span>节点标签</span><b>${(node.tags || []).map(tag => e(tag)).join(' · ') || '标准线路'}</b></div><div class="info-item"><span>最近检测</span><b>${date(node.last_check_at)}</b></div></div></div></article>`).join('');
       app.innerHTML = shell(`${pageHead('Network', '节点状态', `${online} / ${state.nodes.length} 个节点在线，状态会随服务端检测更新。`)}<div class="node-grid">${cards || empty('暂无可用节点', '当前套餐没有可展示的节点。')}</div>`, '节点状态');
     } catch (error) { renderError(error); }
   }
@@ -557,8 +574,16 @@
       const tickets = await api('/user/ticket/fetch');
       if (id !== state.renderId) return;
       state.tickets = Array.isArray(tickets) ? tickets : [];
-      const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? '处理中' : '已关闭'}</span></td><td>${Number(item.reply_status) === 1 ? '有新回复' : '等待回复'}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
-      app.innerHTML = shell(`${pageHead('Support', '我的工单', '提交问题、查看回复，解决过程不会丢失。', '<button class="btn btn-primary" data-action="new-ticket">新建工单</button>')}<section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>主题</th><th>状态</th><th>回复</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有工单', '遇到问题时，可以创建一张新工单。')}</section>`, '我的工单');
+      const openCount = state.tickets.filter(t => Number(t.status) === 0).length;
+      const repliedCount = state.tickets.filter(t => Number(t.reply_status) === 1).length;
+      const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? '处理中' : '已关闭'}</span></td><td>${Number(item.reply_status) === 1 ? '<span class="status info">有新回复</span>' : '等待回复'}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
+      app.innerHTML = shell(`${pageHead('Support', '我的工单', '提交问题、查看回复，解决过程不会丢失。', '<button class="btn btn-primary" data-action="new-ticket">新建工单</button>')}
+        <div class="grid grid-3" style="margin-bottom:24px">
+          ${statCard('ticket', state.tickets.length, '全部工单', 'bg-gradient-primary')}
+          ${statCard('info', openCount, '处理中', 'bg-gradient-success')}
+          ${statCard('bell', repliedCount, '有新回复', 'bg-gradient-warning')}
+        </div>
+        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>主题</th><th>状态</th><th>回复</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有工单', '遇到问题时，可以创建一张新工单。')}</section>`, '我的工单');
     } catch (error) { renderError(error); }
   }
 
@@ -591,7 +616,8 @@
       state.user = user;
       const content = `${pageHead('Account', '个人中心', '你的账户资料与常用操作。')}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>加入于 ${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>账户余额</span><b>${money(user.balance)}</b></div><div class="info-item"><span>套餐编号</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>到期时间</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>账户状态</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? '已停用' : '正常'}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.2</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>`;
+        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.2</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
+        <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>安全设置</h2><p>定期更换密码可以保护账户安全</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">当前密码</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="请输入当前密码"></div><div class="form-row"><div class="field"><label for="new_password">新密码</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="至少 8 位字符"></div><div class="field"><label for="new_password_confirmation">确认新密码</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="再次输入新密码"></div></div><button class="btn btn-primary" type="submit">修改密码</button></form></section>`;
       app.innerHTML = shell(content, '个人中心');
     } catch (error) { renderError(error); }
   }
@@ -634,7 +660,8 @@
     try {
       const data = Object.fromEntries(new FormData(form).entries()); data.level = Number(data.level || 0);
       await api('/user/ticket/save', { method: 'POST', body: data });
-      document.getElementById('global-dialog').close(); toast('工单已提交'); render();
+      document.getElementById('global-dialog').close(); toast('工单已提交');
+      state.tickets = await api('/user/ticket/fetch'); render();
     } catch (error) { toast(error.message, 'error'); button.disabled = false; }
   }
 
@@ -642,7 +669,8 @@
     const button = form.querySelector('[type="submit"]'); button.disabled = true;
     try {
       await api('/user/ticket/reply', { method: 'POST', body: { id: form.dataset.id, message: new FormData(form).get('message') } });
-      toast('回复已发送'); openTicket(form.dataset.id);
+      toast('回复已发送');
+      state.tickets = await api('/user/ticket/fetch'); openTicket(form.dataset.id);
     } catch (error) { toast(error.message, 'error'); button.disabled = false; }
   }
 
@@ -764,19 +792,33 @@
     else if (action === 'send-code') sendEmailCode(target);
     else if (action === 'cancel-order') {
       try { await api('/user/order/cancel', { method: 'POST', body: { trade_no: target.dataset.trade } }); toast('订单已取消'); render(); } catch (error) { toast(error.message, 'error'); }
+    } else if (action === 'go-tickets') {
+      go('tickets');
     }
   });
 
   document.addEventListener('submit', event => {
     const form = event.target;
-    if (!['auth-form', 'purchase-form', 'payment-form', 'ticket-create-form', 'ticket-reply-form'].includes(form.id)) return;
+    if (!['auth-form', 'purchase-form', 'payment-form', 'ticket-create-form', 'ticket-reply-form', 'password-change-form'].includes(form.id)) return;
     event.preventDefault();
     if (form.id === 'auth-form') handleAuth(form);
     if (form.id === 'purchase-form') createOrder(form);
     if (form.id === 'payment-form') checkout(form);
     if (form.id === 'ticket-create-form') submitTicket(form);
     if (form.id === 'ticket-reply-form') replyTicket(form);
+    if (form.id === 'password-change-form') changePassword(form);
   });
+
+  async function changePassword(form) {
+    const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = '正在修改…';
+    try {
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (data.new_password !== data.new_password_confirmation) throw new Error('两次输入的新密码不一致');
+      await api('/user/changePassword', { method: 'POST', body: { old_password: data.old_password, new_password: data.new_password } });
+      form.reset(); toast('密码已修改，请使用新密码重新登录');
+    } catch (error) { toast(error.message, 'error'); }
+    finally { button.disabled = false; button.textContent = '修改密码'; }
+  }
 
   document.addEventListener('input', event => {
     if (event.target.dataset.action === 'search-docs') {
@@ -790,6 +832,9 @@
   (async function boot() {
     try { state.guest = await api('/guest/comm/config'); }
     catch (error) { state.guest = {}; toast(error.message, 'error', '无法读取站点配置'); }
+    if (state.auth) {
+      api('/user/ticket/fetch').then(list => { state.tickets = Array.isArray(list) ? list : []; render(); }).catch(() => {});
+    }
     if (!location.hash) go(state.auth ? 'dashboard' : 'login');
     else render();
   })();
