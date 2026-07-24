@@ -106,7 +106,14 @@
     const visual = config.logoUrl
       ? `<img class="brand-logo" src="${e(config.logoUrl)}" alt="">`
       : '<span class="brand-mark"><span></span><span></span></span>';
-    return `<div class="brand">${visual}<div><strong>${e(config.brandName || config.title)}</strong><small>control center</small></div></div>`;
+    return `<div class="brand">${visual}<div><strong>${e(config.brandName || config.title)}</strong><small>dashboard</small></div></div>`;
+  }
+
+  function statCard(iconName, value, label, color = 'bg-gradient-primary') {
+    return `<div class="card stat-card">
+      <div class="stat-icon ${color}">${icon(iconName)}</div>
+      <div class="meta"><strong>${e(value)}</strong><span>${e(label)}</span></div>
+    </div>`;
   }
 
   async function api(path, options = {}) {
@@ -331,7 +338,7 @@
   }
 
   async function renderDashboard(id) {
-    app.innerHTML = shell(`${pageHead('Overview', '今天也保持连接', '订阅、流量与账户状态，一眼就能看清。')}<div class="grid grid-4"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, '仪表盘');
+    app.innerHTML = shell(`<div class="dashboard-header"><div class="dashboard-header-body"><div><p class="eyebrow">Dashboard</p><h1>仪表盘</h1><p>正在加载你的连接数据…</p></div></div></div><div class="grid grid-4"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, '仪表盘');
     try {
       const [user, subscribe, notices] = await Promise.all([
         api('/user/info'), api('/user/getSubscribe'), api('/user/notice/fetch').catch(() => [])
@@ -343,30 +350,59 @@
       const percent = total ? Math.min(100, Math.round(used / total * 100)) : 0;
       const remaining = Math.max(0, total - used);
       const planName = subscribe.plan?.name || '暂无订阅';
+      const firstName = (user.email || '用户').split('@')[0];
       const announcement = config.announcement || state.notices[0]?.content || '';
-      const content = `${pageHead('Overview', `你好，${(user.email || '用户').split('@')[0]}`, '这里是你的连接状态与订阅概览。', '<a class="btn btn-primary" href="#/plans">查看套餐 ' + icon('arrow') + '</a>')}
-        ${announcement ? `<div class="announcement">${icon('bell')}<p>${e(announcement)}</p></div>` : ''}
-        <div class="grid grid-4">
-          <div class="card stat-card"><span class="stat-icon">${icon('wifi')}</span><strong>${e(planName)}</strong><span>当前订阅</span></div>
-          <div class="card stat-card"><span class="stat-icon">${icon('chart')}</span><strong>${bytes(remaining)}</strong><span>剩余流量</span></div>
-          <div class="card stat-card"><span class="stat-icon">${icon('calendar')}</span><strong>${date(subscribe.expired_at)}</strong><span>订阅到期</span></div>
-          <div class="card stat-card"><span class="stat-icon">${icon('wallet')}</span><strong>${money(user.balance)}</strong><span>账户余额</span></div>
+      const content = `<div class="dashboard-header">
+        <div class="dashboard-header-body">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>你好，${e(firstName)}</h1>
+            <p>这里是你的连接状态与订阅概览。</p>
+          </div>
+          <a class="btn btn-light" href="#/plans">查看套餐</a>
         </div>
-        <div class="grid grid-3" style="margin-top:20px">
-          <section class="card card-pad span-2"><div class="card-title"><div><h2>流量使用</h2><p>上传与下载流量合计</p></div><span class="status ${percent > 85 ? 'danger' : 'success'}">已使用 ${percent}%</span></div>
-            <div class="traffic-summary"><div class="traffic-ring-wrap"><div class="traffic-ring" style="--p:${percent}%"></div><div class="traffic-ring-label"><b>${percent}%</b><span>本周期</span></div></div>
-              <div class="traffic-details"><div class="metric-row"><span>已用流量</span><b>${bytes(used)}</b></div><div class="metric-row"><span>套餐总量</span><b>${bytes(total)}</b></div><div class="metric-row"><span>下次重置</span><b>${subscribe.reset_day ? `每月 ${e(subscribe.reset_day)} 日` : '跟随套餐'}</b></div><div class="progress"><span style="width:${percent}%"></span></div></div>
+      </div>
+      ${announcement ? `<div class="announcement">${icon('bell')}<p>${e(announcement)}</p></div>` : ''}
+      <div class="grid grid-4">
+        ${statCard('wifi', planName, '当前订阅', 'bg-gradient-primary')}
+        ${statCard('chart', bytes(remaining), '剩余流量', 'bg-gradient-success')}
+        ${statCard('calendar', date(subscribe.expired_at), '订阅到期', 'bg-gradient-info')}
+        ${statCard('wallet', money(user.balance), '账户余额', 'bg-gradient-warning')}
+      </div>
+      <div class="grid grid-3" style="margin-top:24px">
+        <section class="card span-2">
+          <div class="card-header">
+            <div><h2>流量使用</h2><p>上传与下载流量合计</p></div>
+            <span class="status ${percent > 85 ? 'danger' : 'success'}">已使用 ${percent}%</span>
+          </div>
+          <div class="card-body">
+            <div class="progress"><span style="width:${percent}%"></span></div>
+            <div class="usage-metrics">
+              <div class="metric"><span>已用流量</span><b>${bytes(used)}</b></div>
+              <div class="metric"><span>套餐总量</span><b>${bytes(total)}</b></div>
+              <div class="metric"><span>剩余流量</span><b>${bytes(remaining)}</b></div>
             </div>
-          </section>
-          <section class="card card-pad"><div class="card-title"><div><h2>订阅链接</h2><p>添加到你的客户端</p></div>${icon('wifi')}</div>
-            <div class="subscribe-box"><span class="subscribe-url">${e(subscribe.subscribe_url || '暂无订阅链接')}</span><button class="btn btn-primary btn-sm" data-action="copy-sub" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('copy')} 复制</button></div>
-            <div class="info-list" style="margin-top:14px"><div class="info-item"><span>设备数量</span><b>${subscribe.device_limit || '不限'}</b></div><div class="info-item"><span>速度上限</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : '不限速'}</b></div><div class="info-item"><span>订阅状态</span><b><span class="status success">正常</span></b></div></div>
+          </div>
+        </section>
+        <section class="card subscribe-card">
+          <div class="card-header"><div><h2>订阅链接</h2><p>添加到你的客户端</p></div></div>
+          <div class="card-body">
+            <div class="subscribe-box">
+              <span class="subscribe-url">${e(subscribe.subscribe_url || '暂无订阅链接')}</span>
+              <button class="btn btn-primary btn-sm" data-action="copy-sub" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('copy')} 复制</button>
+            </div>
+            <div class="info-list">
+              <div class="info-item"><span>设备数量</span><b>${subscribe.device_limit || '不限'}</b></div>
+              <div class="info-item"><span>速度上限</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : '不限速'}</b></div>
+              <div class="info-item"><span>订阅状态</span><b><span class="status success">正常</span></b></div>
+            </div>
             <div class="subscribe-actions">
               <button class="btn btn-warning btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} 重置订阅</button>
               <span class="hint-text">重新生成订阅链接，旧链接将失效</span>
             </div>
-          </section>
-        </div>`;
+          </div>
+        </section>
+      </div>`;
       app.innerHTML = shell(content, '仪表盘', config.tagline);
     } catch (error) { renderError(error); }
   }
@@ -434,8 +470,13 @@
       const codes = Array.isArray(state.invite.codes) ? state.invite.codes : [];
       const rows = codes.map(item => { const link = `${location.origin}/#/register?code=${encodeURIComponent(item.code)}`; return `<tr><td><strong>${e(item.code)}</strong></td><td>${e(item.pv || 0)}</td><td>${date(item.created_at)}</td><td><button class="btn btn-secondary btn-sm" data-action="copy-invite" data-link="${e(link)}">${icon('copy')} 复制链接</button></td></tr>`; }).join('');
       const content = `${pageHead('Referral', '我的邀请', '分享邀请码，清楚查看邀请人数与返佣。', '<button class="btn btn-primary" data-action="generate-invite">生成邀请码</button>')}
-        <div class="grid grid-4"><div class="card stat-card"><span class="stat-icon">${icon('invite')}</span><strong>${e(stat[0] || 0)}</strong><span>已注册用户</span></div><div class="card stat-card"><span class="stat-icon">${icon('wallet')}</span><strong>${money(stat[1])}</strong><span>有效佣金</span></div><div class="card stat-card"><span class="stat-icon">${icon('calendar')}</span><strong>${money(stat[2])}</strong><span>待确认佣金</span></div><div class="card stat-card"><span class="stat-icon">${icon('chart')}</span><strong>${e(stat[3] || 0)}%</strong><span>返佣比例</span></div></div>
-        <section class="card" style="margin-top:20px">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>邀请码</th><th>访问量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有邀请码', '点击右上角生成第一个邀请码。')}</section>`;
+        <div class="grid grid-4">
+          ${statCard('invite', e(stat[0] || 0), '已注册用户', 'bg-gradient-primary')}
+          ${statCard('wallet', money(stat[1]), '有效佣金', 'bg-gradient-success')}
+          ${statCard('calendar', money(stat[2]), '待确认佣金', 'bg-gradient-info')}
+          ${statCard('chart', `${e(stat[3] || 0)}%`, '返佣比例', 'bg-gradient-warning')}
+        </div>
+        <section class="card" style="margin-top:24px">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>邀请码</th><th>访问量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有邀请码', '点击右上角生成第一个邀请码。')}</section>`;
       app.innerHTML = shell(content, '我的邀请');
     } catch (error) { renderError(error); }
   }
@@ -473,7 +514,13 @@
       const totalUp = state.traffic.reduce((sum, item) => sum + Number(item.u || 0), 0);
       const totalDown = state.traffic.reduce((sum, item) => sum + Number(item.d || 0), 0);
       const bars = state.traffic.map(item => { const total = Number(item.u || 0) + Number(item.d || 0); return `<div class="traffic-row"><span>${date(item.record_at)}</span><div class="traffic-track"><i style="width:${Math.max(3, total / max * 100)}%"></i></div><b>${bytes(total)}</b><small>上 ${bytes(item.u)} · 下 ${bytes(item.d)} · ${e(item.server_rate || 1)}×</small></div>`; }).join('');
-      const content = `${pageHead('Usage', '流量明细', '统计记录由服务端生成，倍率已经单独标注。')}<div class="grid grid-3"><div class="card stat-card"><span class="stat-icon">${icon('chart')}</span><strong>${bytes(totalUp + totalDown)}</strong><span>记录总用量</span></div><div class="card stat-card"><span class="stat-icon">${icon('arrow')}</span><strong>${bytes(totalDown)}</strong><span>下载流量</span></div><div class="card stat-card"><span class="stat-icon">${icon('refresh')}</span><strong>${bytes(totalUp)}</strong><span>上传流量</span></div></div><section class="card card-pad traffic-history" style="margin-top:20px">${bars || empty('暂无流量记录', '开始使用节点后，明细会显示在这里。')}</section>`;
+      const content = `${pageHead('Usage', '流量明细', '统计记录由服务端生成，倍率已经单独标注。')}
+        <div class="grid grid-3">
+          ${statCard('chart', bytes(totalUp + totalDown), '记录总用量', 'bg-gradient-primary')}
+          ${statCard('arrow', bytes(totalDown), '下载流量', 'bg-gradient-success')}
+          ${statCard('refresh', bytes(totalUp), '上传流量', 'bg-gradient-info')}
+        </div>
+        <section class="card card-pad traffic-history" style="margin-top:24px">${bars || empty('暂无流量记录', '开始使用节点后，明细会显示在这里。')}</section>`;
       app.innerHTML = shell(content, '流量明细');
     } catch (error) { renderError(error); }
   }

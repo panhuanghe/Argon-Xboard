@@ -59,6 +59,11 @@
 
   <!-- 调试台：写入 localStorage 后重载页面，主题会重新读取配置 -->
   <aside id="dbg-panel">
+    <script>
+      if (new URLSearchParams(location.search).get('hidepanel') === '1') {
+        document.getElementById('dbg-panel').style.display = 'none';
+      }
+    </script>
     <div class="dbg-head" id="dbg-head">
       <div><b>Argon-Xboard 调试台</b><br><span>切换登录态 / 后台配置项</span></div>
       <span id="dbg-caret">▾</span>
