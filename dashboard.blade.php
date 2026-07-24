@@ -9,7 +9,7 @@
   @if (file_exists(public_path("/theme/{$theme}/favicon.ico")))
     <link rel="icon" href="/theme/{{ $theme }}/favicon.ico">
   @endif
-  <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v=1.1.6">
+  <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v=1.1.7">
 </head>
 <body>
   <div id="app" aria-live="polite">
@@ -36,7 +36,7 @@
       'footerText' => $theme_config['footer_text'] ?? 'Powered by Argon-Xboard · Xboard'
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
   </script>
-  <script defer src="/theme/{{ $theme }}/assets/theme.js?v=1.1.6"></script>
+  <script defer src="/theme/{{ $theme }}/assets/theme.js?v=1.1.7"></script>
   {!! $theme_config['custom_html'] ?? '' !!}
 </body>
 </html>
