@@ -153,7 +153,9 @@
     ];
     const tickets = [{ id: 12, level: 1, reply_status: 1, status: 0, subject: '客户端连接问题', created_at: now - 7200, updated_at: now - 1800 }];
     const queryId = new URLSearchParams(path.split('?')[1] || '').get('id');
-    const data = path.includes('/guest/comm/config') ? { app_description: '一个清爽、快速的网络服务中心', is_invite_force: 0, is_email_verify: 0, is_captcha: 0 }
+    const data = path.includes('/guest/comm/config') ? { app_description: '一个清爽、快速的网络服务中心', is_invite_force: 0, is_email_verify: 0, is_captcha: 1, captcha_type: 'turnstile' }
+      : path.includes('/auth/forget') ? true
+      : path.includes('/comm/sendEmailVerify') ? true
       : path.includes('/auth/login') || path.includes('/auth/register') ? { auth_data: 'Bearer preview-token', token: 'preview' }
       : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2 }
       : path.includes('/getSubscribe') ? { plan_id: 2, u: 23 * 1024 ** 3, d: 172 * 1024 ** 3, transfer_enable: 500 * 1024 ** 3, expired_at: now + 86400 * 126, subscribe_url: 'https://example.com/s/nebula-preview', plan: plans[1], device_limit: 8, speed_limit: null, reset_day: 12 }
@@ -279,15 +281,22 @@
     </div>`;
   }
 
+  function authVisual() {
+    return `<aside class="auth-visual" aria-hidden="true">
+      <div class="orbit"></div>
+      <div class="visual-copy"><span class="visual-kicker">● LIVE NETWORK</span><h2>${e(config.tagline)}</h2><p>${e(state.guest.app_description || config.description || '一个专注体验的网络服务控制中心。')}</p><div class="visual-stats"><div><b>99.9%</b><span>服务可用性</span></div><div><b>24/7</b><span>持续连接</span></div><div><b>1-Click</b><span>快速订阅</span></div></div></div>
+    </aside>`;
+  }
+
   function authPage(mode) {
     const register = mode === 'register';
     const guest = state.guest || {};
     const emailVerify = register && Number(guest.is_email_verify) === 1;
-    const invite = register && Number(guest.is_invite_force) === 1;
+    const inviteForce = register && Number(guest.is_invite_force) === 1;
+    const urlCode = register ? (new URLSearchParams((location.hash.split('?')[1] || '')).get('code') || '') : '';
     const authFields = register ? `
-      ${invite ? `<div class="field"><label for="invite_code">邀请码</label><input class="input" id="invite_code" name="invite_code" autocomplete="off" required placeholder="请输入邀请码"></div>` : ''}
-      ${emailVerify ? `<div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="6 位验证码"><button class="btn btn-secondary" type="button" data-action="send-code">发送验证码</button></div></div>` : ''}
-      <div id="captcha-box"></div>` : '';
+      <div class="field"><label for="invite_code">邀请码${inviteForce ? '' : '（选填）'}</label><input class="input" id="invite_code" name="invite_code" autocomplete="off" ${inviteForce ? 'required' : ''} value="${e(urlCode)}" placeholder="${inviteForce ? '请输入邀请码' : '邀请码(选填)'}"></div>
+      ${emailVerify ? `<div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="6 位验证码"><button class="btn btn-secondary" type="button" data-action="send-code">发送验证码</button></div></div>` : ''}` : '';
     app.innerHTML = `<div class="auth-shell">
       <section class="auth-panel">
         ${brand()}
@@ -299,19 +308,40 @@
             <div class="field"><label for="email">邮箱地址</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
             <div class="field"><label for="password">登录密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="${register ? 'new-password' : 'current-password'}" required placeholder="至少 8 位字符"></div></div>
             ${authFields}
-            ${!register ? `<div class="form-meta"><label class="check"><input type="checkbox" checked> 保持登录</label><a class="text-link" href="#/register">没有账户？</a></div>` : `<p class="field-hint">创建账户即代表你同意站点服务条款与隐私政策。</p>`}
+            <div id="captcha-box"></div>
+            ${!register ? `<div class="form-meta"><label class="check"><input type="checkbox" checked> 保持登录</label><a class="text-link" href="#/forgot">找回密码</a></div>` : `<p class="field-hint">创建账户即代表你同意站点服务条款与隐私政策。</p>`}
             <button class="btn btn-primary btn-block" type="submit">${register ? '注册并进入' : '登录控制中心'} ${icon('arrow')}</button>
           </form>
           <p class="field-hint" style="margin-top:20px;text-align:center">${register ? '已经有账户？ <a class="text-link" href="#/login">直接登录</a>' : `还没有账户？ <a class="text-link" href="#/register">免费注册</a>`}</p>
         </div>
         <div class="auth-footer">${e(config.footerText)}</div>
       </section>
-      <aside class="auth-visual" aria-hidden="true">
-        <div class="orbit"></div>
-        <div class="visual-copy"><span class="visual-kicker">● LIVE NETWORK</span><h2>${e(config.tagline)}</h2><p>${e(state.guest.app_description || config.description || '一个专注体验的网络服务控制中心。')}</p><div class="visual-stats"><div><b>99.9%</b><span>服务可用性</span></div><div><b>24/7</b><span>持续连接</span></div><div><b>1-Click</b><span>快速订阅</span></div></div></div>
-      </aside>
+      ${authVisual()}
     </div>`;
-    if (register) mountCaptcha();
+    mountCaptcha();
+  }
+
+  function forgotPage() {
+    app.innerHTML = `<div class="auth-shell">
+      <section class="auth-panel">
+        ${brand()}
+        <div class="auth-main">
+          <p class="eyebrow">Reset password</p>
+          <h1>找回密码</h1>
+          <p>通过注册邮箱接收验证码，验证后即可设置新的登录密码。</p>
+          <form class="form" id="forgot-form">
+            <div class="field"><label for="email">邮箱地址</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
+            <div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="6 位验证码"><button class="btn btn-secondary" type="button" data-action="send-code">发送验证码</button></div></div>
+            <div class="field"><label for="password">新密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="至少 8 位字符"></div></div>
+            <div class="field"><label for="password_confirmation">确认密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required placeholder="再次输入新密码"></div></div>
+            <button class="btn btn-primary btn-block" type="submit">重置密码 ${icon('arrow')}</button>
+          </form>
+          <p class="field-hint" style="margin-top:20px;text-align:center">想起密码了？ <a class="text-link" href="#/login">返回登录</a></p>
+        </div>
+        <div class="auth-footer">${e(config.footerText)}</div>
+      </section>
+      ${authVisual()}
+    </div>`;
   }
 
   async function mountCaptcha() {
@@ -319,6 +349,12 @@
     if (!Number(guest.is_captcha)) return;
     const box = document.getElementById('captcha-box');
     if (!box) return;
+    if (isPreview) {
+      box.innerHTML = `<label class="mock-turnstile"><span class="mock-turnstile-main"><input type="checkbox" id="mock-captcha-cb"> 请验证您是真人</span><span class="mock-turnstile-logo"><b>CLOUDFLARE</b><small>隐私 · 帮助</small></span></label>`;
+      const cb = box.querySelector('#mock-captcha-cb');
+      if (cb) cb.addEventListener('change', () => { state.captchaToken = cb.checked ? 'preview-captcha' : ''; });
+      return;
+    }
     box.innerHTML = '<p class="field-hint">正在载入安全验证…</p>';
     try {
       if (guest.captcha_type === 'turnstile') {
@@ -345,11 +381,12 @@
     });
   }
 
-  async function captchaPayload() {
+  async function captchaPayload(action = 'register') {
     const guest = state.guest || {};
     if (!Number(guest.is_captcha)) return {};
+    if (!document.getElementById('captcha-box')) return {};
     if (guest.captcha_type === 'recaptcha-v3') {
-      const token = await window.grecaptcha.execute(guest.recaptcha_v3_site_key, { action: 'register' });
+      const token = await window.grecaptcha.execute(guest.recaptcha_v3_site_key, { action });
       return { recaptcha_v3_token: token };
     }
     if (!state.captchaToken) throw new Error('请先完成人机验证');
@@ -628,7 +665,7 @@
       state.user = user;
       const content = `${pageHead('Account', '个人中心', '你的账户资料与常用操作。')}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>加入于 ${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>账户余额</span><b>${money(user.balance)}</b></div><div class="info-item"><span>套餐编号</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>到期时间</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>账户状态</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? '已停用' : '正常'}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.5</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
+        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.6</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
         <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>安全设置</h2><p>定期更换密码可以保护账户安全</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">当前密码</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="请输入当前密码"></div><div class="form-row"><div class="field"><label for="new_password">新密码</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="至少 8 位字符"></div><div class="field"><label for="new_password_confirmation">确认新密码</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="再次输入新密码"></div></div><button class="btn btn-primary" type="submit">修改密码</button></form></section>`;
       app.innerHTML = shell(content, '个人中心');
     } catch (error) { renderError(error); }
@@ -734,12 +771,23 @@
     const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = mode === 'register' ? '正在创建账户…' : '正在登录…';
     try {
       const data = Object.fromEntries(new FormData(form).entries());
-      if (mode === 'register') Object.assign(data, await captchaPayload());
+      Object.assign(data, await captchaPayload(mode));
       const result = await api(`/passport/auth/${mode}`, { method: 'POST', body: data });
       saveAuth(result.auth_data);
       toast(mode === 'register' ? '账户创建成功' : '欢迎回来');
       go('dashboard');
     } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = mode === 'register' ? '注册并进入' : '登录控制中心'; }
+  }
+
+  async function handleForgot(form) {
+    const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = '正在重置…';
+    try {
+      const data = Object.fromEntries(new FormData(form).entries());
+      if (data.password !== data.password_confirmation) throw new Error('两次输入的密码不一致');
+      await api('/passport/auth/forget', { method: 'POST', body: { email: data.email, email_code: data.email_code, password: data.password } });
+      toast('密码已重置，请使用新密码登录', 'success');
+      go('login');
+    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = '重置密码'; }
   }
 
   async function sendEmailCode(button) {
@@ -760,10 +808,11 @@
     const dialog = document.getElementById('global-dialog');
     if (dialog?.open) dialog.close();
     let route = routeName();
-    if (!state.auth && !['login', 'register'].includes(route)) route = 'login';
-    if (state.auth && ['login', 'register'].includes(route)) route = 'dashboard';
+    if (!state.auth && !['login', 'register', 'forgot'].includes(route)) route = 'login';
+    if (state.auth && ['login', 'register', 'forgot'].includes(route)) route = 'dashboard';
     if (route !== routeName()) { go(route); return; }
     if (route === 'login' || route === 'register') return authPage(route);
+    if (route === 'forgot') return forgotPage();
     if (route === 'docs') return renderDocs(id);
     if (route === 'plans') return renderPlans(id);
     if (route === 'orders') return renderOrders(id);
@@ -811,9 +860,10 @@
 
   document.addEventListener('submit', event => {
     const form = event.target;
-    if (!['auth-form', 'purchase-form', 'payment-form', 'ticket-create-form', 'ticket-reply-form', 'password-change-form'].includes(form.id)) return;
+    if (!['auth-form', 'forgot-form', 'purchase-form', 'payment-form', 'ticket-create-form', 'ticket-reply-form', 'password-change-form'].includes(form.id)) return;
     event.preventDefault();
     if (form.id === 'auth-form') handleAuth(form);
+    if (form.id === 'forgot-form') handleForgot(form);
     if (form.id === 'purchase-form') createOrder(form);
     if (form.id === 'payment-form') checkout(form);
     if (form.id === 'ticket-create-form') submitTicket(form);
