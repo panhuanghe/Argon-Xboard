@@ -6,15 +6,15 @@
 
 ## 界面预览
 
-| 登录页（游客态） | 仪表盘（已登录） |
-| --- | --- |
-| ![登录页](screenshots/login.png) | ![仪表盘](screenshots/dashboard.png) |
+| 登录页（游客态） | 仪表盘（已登录） | 使用文档 |
+| --- | --- | --- |
+| ![登录页](screenshots/login.png) | ![仪表盘](screenshots/dashboard.png) | ![使用文档](screenshots/docs.png) |
 
 ## 特性
 
 - 登录、注册、邮箱验证码及验证适配
 - 用户仪表盘、「我的订阅」卡片（套餐 / 到期倒计时 / 重置倒计时 / 流量进度）
-- 使用文档、节点状态和每日流量明细
+- 使用文档（渐变头部 + 关键字搜索 + 分类卡片 + 查看详情侧栏）
 - 订阅链接一键复制与一键重置（调用 `/api/v1/user/resetSecurity`）
 - 套餐选择、创建订单与基础支付跳转
 - 订单列表、取消待支付订单
@@ -39,7 +39,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.1.1.zip`](Argon-Xboard-1.1.1.zip)。
+1. 下载安装包 [`Argon-Xboard-1.1.2.zip`](Argon-Xboard-1.1.2.zip)。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色与客服地址。
 

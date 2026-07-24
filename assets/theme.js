@@ -12,7 +12,7 @@
   const state = {
     auth: localStorage.getItem(storageKey) || '',
     guest: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
-    docs: [], invite: null, nodes: [], tickets: [], traffic: [],
+    docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
     loading: false, captchaToken: '', renderId: 0
   };
 
@@ -467,16 +467,54 @@
     } catch (error) { renderError(error); }
   }
 
+  function docsHeader() {
+    const value = e(state.docSearch || '');
+    return `<div class="docs-header">
+      <div class="docs-header-body">
+        <h1>使用文档</h1>
+        <p>安装、连接和常见问题说明</p>
+        <div class="docs-search">
+          <input type="text" class="input" placeholder="请输入关键字" data-action="search-docs" value="${value}">
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderDocList(id) {
+    const term = (state.docSearch || '').toLowerCase();
+    const filtered = state.docs.filter(article => !term || (article.title || '').toLowerCase().includes(term) || (article.category || '').toLowerCase().includes(term));
+    const byCategory = filtered.reduce((all, article) => { (all[article.category || '使用指南'] ||= []).push(article); return all; }, {});
+    const sections = Object.entries(byCategory).map(([category, articles]) => `<section class="card doc-category">
+      <div class="card-header"><h2>${e(category)}</h2><span>${articles.length} 篇文档</span></div>
+      <div class="card-body doc-list">
+        ${articles.map(article => `<div class="doc-item">
+          <div class="doc-icon">${icon('docs')}</div>
+          <div class="doc-info"><b>${e(article.title)}</b><small>更新时间：${date(article.updated_at)}</small></div>
+          <button class="btn btn-primary btn-sm" data-action="open-doc" data-id="${e(article.id)}">查看详情</button>
+        </div>`).join('')}
+      </div>
+    </section>`).join('');
+    const content = `${docsHeader()}<div class="docs-content">${sections || empty(term ? '没有匹配的文档' : '还没有文档', term ? '换个关键词试试' : '管理员暂未发布使用说明。')}</div>`;
+    app.innerHTML = shell(content, '使用文档');
+    const input = app.querySelector('[data-action="search-docs"]');
+    if (input) {
+      input.focus();
+      const len = input.value.length;
+      input.setSelectionRange(len, len);
+    }
+  }
+
   async function renderDocs(id) {
-    app.innerHTML = shell(`${pageHead('Knowledge', '使用文档', '安装、连接和常见问题说明。')}<div class="grid grid-2"><div class="skeleton"></div><div class="skeleton"></div></div>`, '使用文档');
+    app.innerHTML = shell(`${docsHeader()}<div class="docs-content"><div class="skeleton" style="min-height:300px"></div></div>`, '使用文档');
     try {
-      const result = await api('/user/knowledge/fetch?language=zh-CN');
+      if (!state.docs.length) {
+        const result = await api('/user/knowledge/fetch?language=zh-CN');
+        if (id !== state.renderId) return;
+        const groups = Array.isArray(result) ? result : Object.values(result || {});
+        state.docs = groups.flatMap(group => Array.isArray(group) ? group : [group]).filter(Boolean);
+      }
       if (id !== state.renderId) return;
-      const groups = Array.isArray(result) ? result : Object.values(result || {});
-      state.docs = groups.flatMap(group => Array.isArray(group) ? group : [group]).filter(Boolean);
-      const byCategory = state.docs.reduce((all, article) => { (all[article.category || '使用指南'] ||= []).push(article); return all; }, {});
-      const sections = Object.entries(byCategory).map(([category, articles]) => `<section class="card card-pad doc-category"><div class="card-title"><div><h2>${e(category)}</h2><p>${articles.length} 篇文档</p></div>${icon('docs')}</div><div class="doc-list">${articles.map(article => `<button class="doc-link" data-action="open-doc" data-id="${e(article.id)}"><span><b>${e(article.title)}</b><small>更新于 ${date(article.updated_at)}</small></span>${icon('arrow')}</button>`).join('')}</div></section>`).join('');
-      app.innerHTML = shell(`${pageHead('Knowledge', '使用文档', '从快速入门到常见问题，答案都整理在这里。')}<div class="grid grid-2">${sections || empty('还没有文档', '管理员暂未发布使用说明。')}</div>`, '使用文档');
+      renderDocList(id);
     } catch (error) { renderError(error); }
   }
 
@@ -553,7 +591,7 @@
       state.user = user;
       const content = `${pageHead('Account', '个人中心', '你的账户资料与常用操作。')}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>加入于 ${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>账户余额</span><b>${money(user.balance)}</b></div><div class="info-item"><span>套餐编号</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>到期时间</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>账户状态</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? '已停用' : '正常'}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.0.0</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>`;
+        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.2</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>`;
       app.innerHTML = shell(content, '个人中心');
     } catch (error) { renderError(error); }
   }
@@ -738,6 +776,13 @@
     if (form.id === 'payment-form') checkout(form);
     if (form.id === 'ticket-create-form') submitTicket(form);
     if (form.id === 'ticket-reply-form') replyTicket(form);
+  });
+
+  document.addEventListener('input', event => {
+    if (event.target.dataset.action === 'search-docs') {
+      state.docSearch = event.target.value;
+      renderDocList(state.renderId);
+    }
   });
 
   window.addEventListener('hashchange', render);
