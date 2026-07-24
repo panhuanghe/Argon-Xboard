@@ -1,7 +1,7 @@
 {
   "name": "Argon-Xboard",
   "description": "基于 Argon Design System 的 Xboard 用户端主题：现代渐变、圆角卡片、清晰的层级结构，无域名绑定",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "images": "",
   "configs": [
     {
@@ -17,6 +17,21 @@
       "field_name": "tagline",
       "field_type": "input",
       "default_value": "清晰、现代、稳定的连接体验"
+    },
+    {
+      "label": "默认语言",
+      "field_name": "default_i18n",
+      "field_type": "select",
+      "default_value": "zh-CN",
+      "options": [
+        { "value": "zh-CN", "label": "简体中文" },
+        { "value": "zh-TW", "label": "繁體中文" },
+        { "value": "en", "label": "English" },
+        { "value": "ja", "label": "日本語" },
+        { "value": "ko", "label": "한국어" },
+        { "value": "vi", "label": "Tiếng Việt" },
+        { "value": "fa", "label": "فارسی" }
+      ]
     },
     {
       "label": "主题色",

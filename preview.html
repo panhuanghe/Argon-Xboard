@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" id="root-html">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -95,6 +95,19 @@
         </select>
       </div>
 
+      <div class="dbg-group">
+        <label>默认语言</label>
+        <select id="dbg_lang">
+          <option value="zh-CN">简体中文</option>
+          <option value="zh-TW">繁體中文</option>
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="vi">Tiếng Việt</option>
+          <option value="fa">فارسی</option>
+        </select>
+      </div>
+
       <div class="dbg-divider"></div>
 
       <div class="dbg-group">
@@ -172,15 +185,19 @@
       if (qp.get('state') === 'user') dbg.loggedIn = true;
       else if (qp.get('state') === 'guest') dbg.loggedIn = false;
       if (qp.get('route')) dbg.route = qp.get('route');
+      if (qp.get('lang')) { dbg.config = dbg.config || {}; dbg.config.lang = qp.get('lang'); }
       if (qp.get('color')) { dbg.config = dbg.config || {}; dbg.config.primaryColor = qp.get('color'); }
       const config = Object.assign({
-        title: 'Argon-Xboard', brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验',
+        title: 'Argon-Xboard', brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', lang: 'zh-CN',
         primaryColor: '#5e72e4', logoUrl: '', announcement: '',
         supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题'
       }, dbg.config || {});
       window.NEBULAX_PREVIEW = true;
       window.XBOARD_ASSETS = './assets';
       window.XBOARD_THEME = config;
+      const previewLang = config.lang || 'zh-CN';
+      localStorage.setItem('nebulax_lang', previewLang);
+      document.documentElement.lang = previewLang;
       if (dbg.loggedIn) localStorage.setItem('nebulax_auth_data', 'Bearer preview-token');
       else localStorage.removeItem('nebulax_auth_data');
       if (dbg.route) location.hash = '#/' + dbg.route;
@@ -199,7 +216,7 @@
       const defaults = {
         loggedIn: false, route: 'login', colorMode: 'light',
         config: {
-          brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', primaryColor: '#5e72e4',
+          brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', lang: 'zh-CN', primaryColor: '#5e72e4',
           logoUrl: '', announcement: '这是 Argon-Xboard 的本地演示数据。安装到 Xboard 后将自动读取真实账户与订阅信息。',
           supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题', customHtml: ''
         }
@@ -213,6 +230,7 @@
       document.querySelector(`input[name=dbg_state][value="${dbg.loggedIn ? 'user' : 'guest'}"]`).checked = true;
       document.querySelector(`input[name=dbg_theme][value="${dbg.colorMode === 'dark' ? 'dark' : 'light'}"]`).checked = true;
       $('dbg_route').value = dbg.route || 'login';
+      $('dbg_lang').value = dbg.config.lang || 'zh-CN';
       $('dbg_brandName').value = dbg.config.brandName || '';
       $('dbg_tagline').value = dbg.config.tagline || '';
       $('dbg_logoUrl').value = dbg.config.logoUrl || '';
@@ -265,6 +283,7 @@
           config: {
             brandName: $('dbg_brandName').value.trim(),
             tagline: $('dbg_tagline').value.trim(),
+            lang: $('dbg_lang').value,
             primaryColor: color,
             logoUrl: $('dbg_logoUrl').value.trim(),
             announcement: $('dbg_announcement').value.trim(),

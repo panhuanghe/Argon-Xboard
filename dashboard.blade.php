@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="{{ $theme_config['default_i18n'] ?? 'zh-CN' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,7 +9,7 @@
   @if (file_exists(public_path("/theme/{$theme}/favicon.ico")))
     <link rel="icon" href="/theme/{{ $theme }}/favicon.ico">
   @endif
-  <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v=1.1.7">
+  <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v=1.1.8">
 </head>
 <body>
   <div id="app" aria-live="polite">
@@ -29,6 +29,7 @@
       'logo' => $logo ?? '',
       'brandName' => $theme_config['brand_name'] ?? 'Argon-Xboard',
       'tagline' => $theme_config['tagline'] ?? '清晰、现代、稳定的连接体验',
+      'lang' => $theme_config['default_i18n'] ?? 'zh-CN',
       'primaryColor' => $theme_config['primary_color'] ?? '#5e72e4',
       'logoUrl' => $theme_config['logo_url'] ?? '',
       'announcement' => $theme_config['announcement'] ?? '',
@@ -36,7 +37,7 @@
       'footerText' => $theme_config['footer_text'] ?? 'Powered by Argon-Xboard · Xboard'
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!};
   </script>
-  <script defer src="/theme/{{ $theme }}/assets/theme.js?v=1.1.7"></script>
+  <script defer src="/theme/{{ $theme }}/assets/theme.js?v=1.1.8"></script>
   {!! $theme_config['custom_html'] ?? '' !!}
 </body>
 </html>

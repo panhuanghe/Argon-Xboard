@@ -1,10 +1,36 @@
 (() => {
   'use strict';
 
+  const langKey = 'nebulax_lang';
+  const initialLang = localStorage.getItem(langKey) || (window.XBOARD_THEME || {}).lang || 'zh-CN';
+
+  const langList = [
+    { code: 'zh-CN', name: '简体中文' },
+    { code: 'zh-TW', name: '繁體中文' },
+    { code: 'en', name: 'English' },
+    { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' },
+    { code: 'vi', name: 'Tiếng Việt' },
+    { code: 'fa', name: 'فارسی' }
+  ];
+  let currentLang = initialLang;
+  const i18n = {"zh-CN":{"tagline":"清晰、现代、稳定的连接体验","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"月付","quarter_price":"季付","half_year_price":"半年付","year_price":"年付","two_year_price":"两年付","three_year_price":"三年付","onetime_price":"一次性","reset_price":"重置流量","status_pending":"待支付","status_processing":"开通中","status_completed":"已完成","status_cancelled":"已取消","request_failed":"请求失败，请稍后重试","nav_main":"主导航","nav_dashboard":"仪表盘","nav_docs":"使用文档","nav_subscription":"订阅","nav_nodes":"节点列表","nav_plans":"购买订阅","nav_finance":"财务","nav_orders":"我的订单","nav_invites":"我的邀请","nav_user":"用户","nav_account":"个人中心","nav_tickets":"我的工单","nav_traffic":"流量明细","help_title":"需要一点帮助？","help_text":"遇到连接或订阅问题，可以随时联系我们。","help_contact":"联系客服","logout":"退出登录","theme_toggle":"切换深浅色","notifications":"查看通知","mobile_nav":"移动端导航","mobile_home":"首页","mobile_sub":"订阅","mobile_docs":"文档","mobile_ticket":"工单","mobile_me":"我的","auth_welcome":"欢迎回来","auth_create":"创建你的账户","auth_welcome_sub":"登录后管理订阅、查看流量与选择套餐。","auth_create_sub":"几步即可开始，连接体验从这里变得更轻盈。","email":"邮箱地址","password":"登录密码","password_min":"至少 8 位字符","remember":"保持登录","forgot_password":"找回密码","register_submit":"注册并进入","login_submit":"登录控制中心","has_account":"已经有账户？","direct_login":"直接登录","no_account":"还没有账户？","free_register":"免费注册","invite_code":"邀请码","optional":"（选填）","invite_placeholder":"请输入邀请码","invite_optional_ph":"邀请码(选填)","email_code":"邮箱验证码","code_placeholder":"6 位验证码","send_code":"发送验证码","register_agree":"创建账户即代表你同意站点服务条款与隐私政策。","new_password":"新密码","confirm_password":"确认密码","confirm_password_ph":"再次输入新密码","reset_password":"重置密码","remember_password":"想起密码了？","back_login":"返回登录","captcha_human":"请验证您是真人","captcha_loading":"正在载入安全验证…","captcha_recaptcha":"本页面受 reCAPTCHA 安全验证保护。","captcha_failed":"安全验证加载失败，请刷新页面重试。","captcha_required":"请先完成人机验证","dashboard_loading":"正在加载你的连接数据…","no_subscribe":"暂无订阅","no_active_subscribe":"暂无有效订阅","user":"用户","current_subscribe":"当前订阅","remaining_traffic":"剩余流量","subscribe_expire":"订阅到期","account_balance":"账户余额","no_subscribe_url":"暂无订阅链接","device_count":"设备数量","speed_limit":"速度上限","subscribe_status":"订阅状态","effective":"有效","plans_title":"选择适合你的方案","plans_sub":"所有价格与流量都清楚列出，没有藏起来的小字。","plans_period_tip":"按需求选择周期，随时可以在账户中查看订单。","plans_none":"暂时没有可售套餐","plans_none_sub":"管理员还没有发布订阅套餐。","unlimited_speed":"不限速","devices":"台设备","plan_feature":"稳定线路与便捷订阅","select_plan":"选择该方案","period":"周期","orders_title":"查看购买记录和订单状态。","buy_plan":"购买套餐","total_orders":"累计订单","paid_amount":"已支付金额","pending_orders":"待支付订单","completed_orders":"已完成订单","order":"订单","amount":"金额","create_time":"创建时间","status":"状态","action":"操作","orders_empty":"选择一个套餐后，订单会显示在这里。","search_placeholder":"请输入关键字","docs_guide":"使用指南","docs_no_match":"没有匹配的文档","docs_none":"还没有文档","docs_try":"换个关键词试试","docs_admin_none":"管理员暂未发布使用说明。","invites_title":"查看邀请码和返佣统计。","invites_sub":"分享邀请码，清楚查看邀请人数与返佣。","generate_code":"生成邀请码","registered_users":"已注册用户","valid_commission":"有效佣金","pending_commission":"待确认佣金","commission_rate":"返佣比例","invite_code_label":"邀请码","visits":"访问量","copy_link":"复制链接","invites_empty":"还没有邀请码","invites_empty_sub":"点击右上角生成第一个邀请码。","tickets_title":"提交问题、查看回复，解决过程不会丢失。","new_ticket":"新建工单","ticket_subject":"主题","ticket_level":"优先级","ticket_level_0":"一般","ticket_level_1":"紧急","ticket_level_2":"非常紧急","ticket_detail":"问题详情","ticket_detail_ph":"请写明设备、客户端和错误现象","cancel":"取消","submit_ticket":"提交工单","ticket_open":"处理中","ticket_closed":"已关闭","ticket_new_reply":"有新回复","ticket_waiting":"等待回复","ticket_reply":"继续回复","send_reply":"发送回复","close_ticket":"关闭工单","traffic_title":"查看每日上传和下载用量。","settings":"偏好设置","settings_sub":"这些设置保存在当前浏览器","ui_theme":"界面主题","support":"客服支持","open_support":"打开客服","not_configured":"未配置","frontend_version":"前端版本","login_status":"登录状态","security":"安全设置","security_sub":"定期更换密码可以保护账户安全","current_password":"当前密码","new_password_label":"新密码","confirm_new_password":"确认新密码","change_password":"修改密码","changing":"正在修改…","copy":"复制","copied":"已复制","operation_failed":"操作失败","operation_success":"操作成功","long_term":"长期有效","loading":"正在载入…","lang":"语言","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"个人中心","logout_action":"登出","dashboard_greeting":"你好，","dashboard_subtitle":"这里是你的连接状态与订阅概览。","my_subscribe":"我的订阅","subscribe_url":"订阅链接","subscribe_url_sub":"添加到你的客户端","status_normal":"正常","used":"已用","used_traffic":"已用流量","total":"总计","reset_after_days":"天后重置流量","unlimited":"不限","traffic_title_short":"流量","expires_at":"于 {date} 到期","expires_days_remaining":"距离到期还有 {days} 天","reset_days":"{days} 天后重置流量","reset_subscribe":"重置订阅","reset_hint":"重新生成订阅链接，旧链接将失效","copy_subscribe_url":"订阅链接已复制","copy_invite_url":"邀请链接已复制","copy_failed":"复制失败，请手动复制","reset_confirm":"确定要重置订阅链接吗？旧链接将立即失效。","reset_done":"订阅链接已重置","section_service":"服务","section_user":"用户","view_plan":"查看套餐","visual_uptime":"服务可用性","visual_connect":"持续连接","visual_subscribe":"快速订阅","joined_at":"加入于","plan_id":"套餐编号","expire_time":"到期时间","account_status":"账户状态","banned":"已停用","account_subtitle_loading":"管理个人信息与安全选项。","account_subtitle":"你的账户资料与常用操作。","current_password_ph":"请输入当前密码","error_title":"页面暂时无法载入","error_subtitle":"服务器返回了一个错误。","load_failed":"加载失败","error_retry":"请检查网络或稍后再试。","reload":"重新加载","connection_error":"连接异常","forgot_desc":"通过注册邮箱接收验证码，验证后即可设置新的登录密码。","please_enter_email":"请先填写邮箱地址"},"zh-TW":{"tagline":"清晰、現代、穩定的連線體驗","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"月付","quarter_price":"季付","half_year_price":"半年付","year_price":"年付","two_year_price":"兩年付","three_year_price":"三年付","onetime_price":"一次性","reset_price":"重置流量","status_pending":"待支付","status_processing":"開通中","status_completed":"已完成","status_cancelled":"已取消","request_failed":"請求失敗，請稍後再試","nav_main":"主導航","nav_dashboard":"儀表板","nav_docs":"使用文件","nav_subscription":"訂閱","nav_nodes":"節點列表","nav_plans":"購買訂閱","nav_finance":"財務","nav_orders":"我的訂單","nav_invites":"我的邀請","nav_user":"用戶","nav_account":"個人中心","nav_tickets":"我的工單","nav_traffic":"流量明細","help_title":"需要一點幫助？","help_text":"遇到連線或訂閱問題，可以隨時聯繫我們。","help_contact":"聯繫客服","logout":"登出","theme_toggle":"切換深淺色","notifications":"查看通知","mobile_nav":"移動端導航","mobile_home":"首頁","mobile_sub":"訂閱","mobile_docs":"文件","mobile_ticket":"工單","mobile_me":"我的","auth_welcome":"歡迎回來","auth_create":"創建你的帳戶","auth_welcome_sub":"登入後管理訂閱、查看流量與選擇方案。","auth_create_sub":"幾步即可開始，連線體驗從這裡變得更輕盈。","email":"郵箱地址","password":"登入密碼","password_min":"至少 8 位字符","remember":"保持登入","forgot_password":"找回密碼","register_submit":"註冊並進入","login_submit":"登入控制中心","has_account":"已經有帳戶？","direct_login":"直接登入","no_account":"還沒有帳戶？","free_register":"免費註冊","invite_code":"邀請碼","optional":"（選填）","invite_placeholder":"請輸入邀請碼","invite_optional_ph":"邀請碼(選填)","email_code":"郵箱驗證碼","code_placeholder":"6 位驗證碼","send_code":"發送驗證碼","register_agree":"創建帳戶即代表你同意站點服務條款與隱私政策。","new_password":"新密碼","confirm_password":"確認密碼","confirm_password_ph":"再次輸入新密碼","reset_password":"重置密碼","remember_password":"想起密碼了？","back_login":"返回登入","captcha_human":"請驗證您是真人","captcha_loading":"正在載入安全驗證…","captcha_recaptcha":"本頁面受 reCAPTCHA 安全驗證保護。","captcha_failed":"安全驗證載入失敗，請刷新頁面重試。","captcha_required":"請先完成人機驗證","dashboard_loading":"正在載入你的連線數據…","no_subscribe":"暫無訂閱","no_active_subscribe":"暫無有效訂閱","user":"用戶","current_subscribe":"當前訂閱","remaining_traffic":"剩餘流量","subscribe_expire":"訂閱到期","account_balance":"帳戶餘額","no_subscribe_url":"暫無訂閱鏈接","device_count":"設備數量","speed_limit":"速度上限","subscribe_status":"訂閱狀態","effective":"有效","plans_title":"選擇適合你的方案","plans_sub":"所有價格與流量都清楚列出，沒有藏起來的小字。","plans_period_tip":"按需求選擇週期，隨時可以在帳戶中查看訂單。","plans_none":"暫時沒有可售方案","plans_none_sub":"管理員還沒有發布訂閱方案。","unlimited_speed":"不限速","devices":"台設備","plan_feature":"穩定線路與便捷訂閱","select_plan":"選擇該方案","period":"週期","orders_title":"查看購買記錄和訂單狀態。","buy_plan":"購買方案","total_orders":"累計訂單","paid_amount":"已支付金額","pending_orders":"待支付訂單","completed_orders":"已完成訂單","order":"訂單","amount":"金額","create_time":"創建時間","status":"狀態","action":"操作","orders_empty":"選擇一個方案後，訂單會顯示在這裡。","search_placeholder":"請輸入關鍵字","docs_guide":"使用指南","docs_no_match":"沒有匹配的文檔","docs_none":"還沒有文檔","docs_try":"換個關鍵詞試試","docs_admin_none":"管理員暫未發布使用說明。","invites_title":"查看邀請碼和返傭統計。","invites_sub":"分享邀請碼，清楚查看邀請人數與返傭。","generate_code":"生成邀請碼","registered_users":"已註冊用戶","valid_commission":"有效傭金","pending_commission":"待確認傭金","commission_rate":"返傭比例","invite_code_label":"邀請碼","visits":"訪問量","copy_link":"複製鏈接","invites_empty":"還沒有邀請碼","invites_empty_sub":"點擊右上角生成第一個邀請碼。","tickets_title":"提交問題、查看回覆，解決過程不會丟失。","new_ticket":"新建工單","ticket_subject":"主題","ticket_level":"優先級","ticket_level_0":"一般","ticket_level_1":"緊急","ticket_level_2":"非常緊急","ticket_detail":"問題詳情","ticket_detail_ph":"請寫明設備、客戶端和錯誤現象","cancel":"取消","submit_ticket":"提交工單","ticket_open":"處理中","ticket_closed":"已關閉","ticket_new_reply":"有新回覆","ticket_waiting":"等待回覆","ticket_reply":"繼續回覆","send_reply":"發送回覆","close_ticket":"關閉工單","traffic_title":"查看每日上傳和下載用量。","settings":"偏好設置","settings_sub":"這些設置保存在當前瀏覽器","ui_theme":"界面主題","support":"客服支持","open_support":"打開客服","not_configured":"未配置","frontend_version":"前端版本","login_status":"登入狀態","security":"安全設置","security_sub":"定期更換密碼可以保護帳戶安全","current_password":"當前密碼","new_password_label":"新密碼","confirm_new_password":"確認新密碼","change_password":"修改密碼","changing":"正在修改…","copy":"複製","copied":"已複製","operation_failed":"操作失敗","operation_success":"操作成功","long_term":"長期有效","loading":"正在載入…","lang":"語言","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"個人中心","logout_action":"登出","forgot_desc":"通過註冊郵箱接收驗證碼，驗證後即可設置新的登入密碼。","please_enter_email":"請先填寫郵箱地址"},"en":{"tagline":"Clear, modern, and stable connectivity","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"Monthly","quarter_price":"Quarterly","half_year_price":"Half-yearly","year_price":"Yearly","two_year_price":"2-Year","three_year_price":"3-Year","onetime_price":"One-time","reset_price":"Reset Data","status_pending":"Pending","status_processing":"Processing","status_completed":"Completed","status_cancelled":"Cancelled","request_failed":"Request failed, please try again later","nav_main":"Main","nav_dashboard":"Dashboard","nav_docs":"Docs","nav_subscription":"Subscription","nav_nodes":"Nodes","nav_plans":"Plans","nav_finance":"Finance","nav_orders":"Orders","nav_invites":"Invites","nav_user":"User","nav_account":"Account","nav_tickets":"Tickets","nav_traffic":"Traffic","help_title":"Need help?","help_text":"Contact us anytime for connection or subscription issues.","help_contact":"Contact Support","logout":"Logout","theme_toggle":"Toggle theme","notifications":"Notifications","mobile_nav":"Mobile nav","mobile_home":"Home","mobile_sub":"Plans","mobile_docs":"Docs","mobile_ticket":"Tickets","mobile_me":"Me","auth_welcome":"Welcome back","auth_create":"Create account","auth_welcome_sub":"Manage subscriptions, traffic and plans after login.","auth_create_sub":"Get started in a few steps.","email":"Email","password":"Password","password_min":"At least 8 characters","remember":"Keep me logged in","forgot_password":"Forgot password?","register_submit":"Create account","login_submit":"Login","has_account":"Already have an account?","direct_login":"Login","no_account":"No account?","free_register":"Register free","invite_code":"Invite code","optional":" (optional)","invite_placeholder":"Enter invite code","invite_optional_ph":"Invite code (optional)","email_code":"Email code","code_placeholder":"6-digit code","send_code":"Send code","register_agree":"Creating an account means you agree to the Terms of Service and Privacy Policy.","new_password":"New password","confirm_password":"Confirm password","confirm_password_ph":"Re-enter new password","reset_password":"Reset password","remember_password":"Remember your password?","back_login":"Back to login","captcha_human":"Please verify you are human","captcha_loading":"Loading security check…","captcha_recaptcha":"This page is protected by reCAPTCHA.","captcha_failed":"Security check failed, please refresh.","captcha_required":"Please complete the human verification","dashboard_loading":"Loading your connection data…","no_subscribe":"No subscription","no_active_subscribe":"No active subscription","user":"User","current_subscribe":"Current plan","remaining_traffic":"Remaining data","subscribe_expire":"Expires","account_balance":"Balance","no_subscribe_url":"No subscribe URL","device_count":"Devices","speed_limit":"Speed limit","subscribe_status":"Status","effective":"Active","plans_title":"Choose your plan","plans_sub":"All prices and data allowances are clearly listed.","plans_period_tip":"Pick a billing cycle; you can review orders in your account.","plans_none":"No plans available","plans_none_sub":"The admin has not published any plans yet.","unlimited_speed":"Unlimited speed","devices":" devices","plan_feature":"Stable routes & easy subscription","select_plan":"Select plan","period":"Period","orders_title":"Review purchase history and order status.","buy_plan":"Buy plan","total_orders":"Total orders","paid_amount":"Paid amount","pending_orders":"Pending","completed_orders":"Completed","order":"Order","amount":"Amount","create_time":"Created","status":"Status","action":"Action","orders_empty":"Orders will appear here after you choose a plan.","search_placeholder":"Search keywords","docs_guide":"Guide","docs_no_match":"No matching docs","docs_none":"No docs yet","docs_try":"Try another keyword","docs_admin_none":"No guides published yet.","invites_title":"Invite codes & commission stats.","invites_sub":"Share invite codes and track referrals.","generate_code":"Generate code","registered_users":"Registered users","valid_commission":"Valid commission","pending_commission":"Pending commission","commission_rate":"Rate","invite_code_label":"Invite code","visits":"Visits","copy_link":"Copy link","invites_empty":"No invite code yet","invites_empty_sub":"Click the button above to generate your first code.","tickets_title":"Submit issues and view replies without losing context.","new_ticket":"New ticket","ticket_subject":"Subject","ticket_level":"Priority","ticket_level_0":"Normal","ticket_level_1":"Urgent","ticket_level_2":"Critical","ticket_detail":"Details","ticket_detail_ph":"Describe device, client and error","cancel":"Cancel","submit_ticket":"Submit ticket","ticket_open":"Open","ticket_closed":"Closed","ticket_new_reply":"New reply","ticket_waiting":"Waiting","ticket_reply":"Reply","send_reply":"Send reply","close_ticket":"Close ticket","traffic_title":"View daily upload and download usage.","settings":"Preferences","settings_sub":"These settings are saved in this browser","ui_theme":"Theme","support":"Support","open_support":"Open support","not_configured":"Not configured","frontend_version":"Frontend version","login_status":"Login status","security":"Security","security_sub":"Changing your password regularly keeps your account safe","current_password":"Current password","new_password_label":"New password","confirm_new_password":"Confirm new password","change_password":"Change password","changing":"Changing…","copy":"Copy","copied":"Copied","operation_failed":"Operation failed","operation_success":"Operation successful","long_term":"Lifetime","loading":"Loading…","lang":"Language","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"Account","logout_action":"Logout","dashboard_greeting":"Hello, ","dashboard_subtitle":"Here is your connection status and subscription overview.","my_subscribe":"My Subscription","subscribe_url":"Subscription URL","subscribe_url_sub":"Add to your client","status_normal":"Normal","used":"Used","used_traffic":"Used Traffic","total":"Total","reset_after_days":" days until reset","unlimited":"Unlimited","traffic_title_short":"Traffic","expires_at":"Expires {date}","expires_days_remaining":"{days} days remaining","reset_days":"Resets in {days} days","reset_subscribe":"Reset URL","reset_hint":"Regenerate subscription URL; the old one will stop working.","copy_subscribe_url":"Subscription URL copied","copy_invite_url":"Invite link copied","copy_failed":"Copy failed, please copy manually","reset_confirm":"Are you sure you want to reset the subscription URL? The old URL will stop working immediately.","reset_done":"Subscription URL reset","section_service":"Service","section_user":"User","view_plan":"View Plan","visual_uptime":"Service Uptime","visual_connect":"Always On","visual_subscribe":"One-Click Subscribe","joined_at":"Joined ","plan_id":"Plan ID","expire_time":"Expires","account_status":"Account Status","banned":"Suspended","account_subtitle_loading":"Manage personal info and security options.","account_subtitle":"Your account details and common actions.","current_password_ph":"Enter current password","error_title":"Page temporarily unavailable","error_subtitle":"The server returned an error.","load_failed":"Failed to load","error_retry":"Please check your network or try again later.","reload":"Reload","connection_error":"Connection Error","forgot_desc":"Receive a code at your registered email, then set a new password.","please_enter_email":"Please enter your email first"},"ja":{"tagline":"クリアでモダン、そして安定した接続体験","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"月払い","quarter_price":"3ヶ月払い","half_year_price":"半年払い","year_price":"年払い","two_year_price":"2年払い","three_year_price":"3年払い","onetime_price":"ワンタイム","reset_price":"データリセット","status_pending":"支払待ち","status_processing":"開通中","status_completed":"完了","status_cancelled":"キャンセル","request_failed":"リクエストに失敗しました。後でもう一度お試しください","nav_main":"メインナビ","nav_dashboard":"ダッシュボード","nav_docs":"ドキュメント","nav_subscription":"サブスクリプション","nav_nodes":"ノード","nav_plans":"プラン購入","nav_finance":"財務","nav_orders":"注文履歴","nav_invites":"招待","nav_user":"ユーザー","nav_account":"アカウント","nav_tickets":"チケット","nav_traffic":"トラフィック","help_title":"ヘルプが必要ですか？","help_text":"接続やサブスクリプションの問題があれば、いつでもお問い合わせください。","help_contact":"サポートへ","logout":"ログアウト","theme_toggle":"テーマ切替","notifications":"通知","mobile_nav":"モバイルナビ","mobile_home":"ホーム","mobile_sub":"プラン","mobile_docs":"ドキュメント","mobile_ticket":"チケット","mobile_me":"マイページ","auth_welcome":"お帰りなさい","auth_create":"アカウント作成","auth_welcome_sub":"ログイン後、サブスクリプションやトラフィック、プランを管理できます。","auth_create_sub":"数ステップで開始、接続体験が軽やかになります。","email":"メールアドレス","password":"パスワード","password_min":"8文字以上","remember":"ログイン状態を保持","forgot_password":"パスワードを忘れた","register_submit":"登録して進む","login_submit":"ログイン","has_account":"既にアカウントをお持ちですか？","direct_login":"ログイン","no_account":"アカウントをお持ちでないですか？","free_register":"無料登録","invite_code":"招待コード","optional":"（任意）","invite_placeholder":"招待コードを入力","invite_optional_ph":"招待コード（任意）","email_code":"メール認証コード","code_placeholder":"6桁のコード","send_code":"コード送信","register_agree":"アカウントを作成すると、サービス利用規約およびプライバシーポリシーに同意したものとみなされます。","new_password":"新しいパスワード","confirm_password":"パスワード確認","confirm_password_ph":"新しいパスワードを再入力","reset_password":"パスワードリセット","remember_password":"パスワードを思い出しましたか？","back_login":"ログインに戻る","captcha_human":"人間であることを確認してください","captcha_loading":"セキュリティ認証を読み込み中…","captcha_recaptcha":"このページは reCAPTCHA で保護されています。","captcha_failed":"認証の読み込みに失敗しました。ページを更新してください。","captcha_required":"人間認証を完了してください","dashboard_loading":"接続データを読み込み中…","no_subscribe":"サブスクリプションなし","no_active_subscribe":"有効なサブスクリプションなし","user":"ユーザー","current_subscribe":"現在のプラン","remaining_traffic":"残りトラフィック","subscribe_expire":"有効期限","account_balance":"残高","no_subscribe_url":"購読URLがありません","device_count":"デバイス数","speed_limit":"速度制限","subscribe_status":"状態","effective":"有効","plans_title":"プランを選択","plans_sub":"価格と通信量はすべて明確に表示されています。","plans_period_tip":"請求サイクルを選択。注文はアカウントで確認できます。","plans_none":"販売中のプランはありません","plans_none_sub":"管理者がプランを公開していません。","unlimited_speed":"速度無制限","devices":" 台のデバイス","plan_feature":"安定したルートと簡単なサブスクリプション","select_plan":"このプランを選択","period":"期間","orders_title":"購入履歴と注文状況を確認。","buy_plan":"プランを購入","total_orders":"累計注文","paid_amount":"支払済み金額","pending_orders":"支払待ち","completed_orders":"完了注文","order":"注文","amount":"金額","create_time":"作成日","status":"状態","action":"操作","orders_empty":"プランを選択すると、ここに注文が表示されます。","search_placeholder":"キーワードを入力","docs_guide":"ガイド","docs_no_match":"一致するドキュメントがありません","docs_none":"ドキュメントがありません","docs_try":"別のキーワードを試す","docs_admin_none":"ガイドがまだ公開されていません。","invites_title":"招待コードとコミッション統計を確認。","invites_sub":"招待コードを共有し、紹介状況を追跡。","generate_code":"コード生成","registered_users":"登録ユーザー","valid_commission":"有効コミッション","pending_commission":"保留中コミッション","commission_rate":"レート","invite_code_label":"招待コード","visits":"訪問数","copy_link":"リンクをコピー","invites_empty":"招待コードがありません","invites_empty_sub":"右上のボタンから最初のコードを生成してください。","tickets_title":"問題を送信し、返信を確認。","new_ticket":"新規チケット","ticket_subject":"件名","ticket_level":"優先度","ticket_level_0":"通常","ticket_level_1":"緊急","ticket_level_2":"至急","ticket_detail":"詳細","ticket_detail_ph":"デバイス、クライアント、エラー現象を記載してください","cancel":"キャンセル","submit_ticket":"チケット送信","ticket_open":"処理中","ticket_closed":"完了","ticket_new_reply":"新着返信","ticket_waiting":"待機中","ticket_reply":"返信","send_reply":"返信送信","close_ticket":"チケットを閉じる","traffic_title":"毎日のアップロード・ダウンロード量を確認。","settings":"設定","settings_sub":"これらの設定はこのブラウザに保存されます","ui_theme":"テーマ","support":"サポート","open_support":"サポートを開く","not_configured":"未設定","frontend_version":"フロントエンドバージョン","login_status":"ログイン状態","security":"セキュリティ","security_sub":"定期的なパスワード変更はアカウントを保護します","current_password":"現在のパスワード","new_password_label":"新しいパスワード","confirm_new_password":"新しいパスワード（確認）","change_password":"パスワード変更","changing":"変更中…","copy":"コピー","copied":"コピーしました","operation_failed":"操作に失敗しました","operation_success":"操作が完了しました","long_term":"無期限","loading":"読み込み中…","lang":"言語","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"アカウント","logout_action":"ログアウト","forgot_desc":"登録したメールアドレスにコードを受け取り、認証後に新しいパスワードを設定できます。","please_enter_email":"メールアドレスを入力してください"},"ko":{"tagline":"선명하고 현대적이며 안정적인 연결 경험","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"월간","quarter_price":"분기","half_year_price":"반기","year_price":"연간","two_year_price":"2년","three_year_price":"3년","onetime_price":"일회성","reset_price":"데이터 초기화","status_pending":"결제 대기","status_processing":"개통 중","status_completed":"완료","status_cancelled":"취소","request_failed":"요청 실패, 잠시 후 다시 시도해주세요","nav_main":"메인","nav_dashboard":"대시보드","nav_docs":"문서","nav_subscription":"구독","nav_nodes":"노드","nav_plans":"구매","nav_finance":"결제","nav_orders":"주문","nav_invites":"초대","nav_user":"사용자","nav_account":"계정","nav_tickets":"티켓","nav_traffic":"트래픽","help_title":"도움이 필요하신가요?","help_text":"연결 또는 구독 문제가 있으면 언제든지 문의하세요.","help_contact":"고객지원","logout":"로그아웃","theme_toggle":"테마 전환","notifications":"알림","mobile_nav":"모바일 메뉴","mobile_home":"홈","mobile_sub":"구독","mobile_docs":"문서","mobile_ticket":"티켓","mobile_me":"내 정보","auth_welcome":"환영합니다","auth_create":"계정 만들기","auth_welcome_sub":"로그인 후 구독, 트래픽 및 요금제를 관리하세요.","auth_create_sub":"몇 단계만으로 시작하세요.","email":"이메일","password":"비밀번호","password_min":"8자 이상","remember":"로그인 상태 유지","forgot_password":"비밀번호 찾기","register_submit":"가입하기","login_submit":"로그인","has_account":"이미 계정이 있으신가요?","direct_login":"로그인","no_account":"계정이 없으신가요?","free_register":"무료 가입","invite_code":"초대 코드","optional":" (선택)","invite_placeholder":"초대 코드 입력","invite_optional_ph":"초대 코드 (선택)","email_code":"이메일 인증 코드","code_placeholder":"6자리 코드","send_code":"코드 발송","register_agree":"계정을 생성하면 서비스 약관 및 개인정보처리방침에 동의하게 됩니다.","new_password":"새 비밀번호","confirm_password":"비밀번호 확인","confirm_password_ph":"새 비밀번호 다시 입력","reset_password":"비밀번호 재설정","remember_password":"비밀번호를 기억하시나요?","back_login":"로그인으로 돌아가기","captcha_human":"真人임을 인증해주세요","captcha_loading":"보안 인증 로드 중…","captcha_recaptcha":"이 페이지는 reCAPTCHA로 보호됩니다.","captcha_failed":"보안 인증 로드 실패, 새로고침해주세요.","captcha_required":"먼저 인증을 완료해주세요","dashboard_loading":"연결 데이터 로드 중…","no_subscribe":"구독 없음","no_active_subscribe":"활성 구독 없음","user":"사용자","current_subscribe":"현재 구독","remaining_traffic":"남은 트래픽","subscribe_expire":"만료일","account_balance":"잔액","no_subscribe_url":"구독 URL 없음","device_count":"기기 수","speed_limit":"속도 제한","subscribe_status":"상태","effective":"유효","plans_title":"요금제 선택","plans_sub":"모든 가격과 데이터가 명확하게 표시됩니다.","plans_period_tip":"원하는 결제 주기를 선택하고 주문은 계정에서 확인하세요.","plans_none":"판매 중인 요금제 없음","plans_none_sub":"관리자가 요금제를 게시하지 않았습니다.","unlimited_speed":"속도 무제한","devices":"대 기기","plan_feature":"안정적인 경로와 간편한 구독","select_plan":"요금제 선택","period":"기간","orders_title":"구매 내역과 주문 상태를 확인하세요.","buy_plan":"요금제 구매","total_orders":"총 주문","paid_amount":"결제 금액","pending_orders":"결제 대기","completed_orders":"완료 주문","order":"주문","amount":"금액","create_time":"생성일","status":"상태","action":"작업","orders_empty":"요금제를 선택하면 여기에 주문이 표시됩니다.","search_placeholder":"키워드 입력","docs_guide":"가이드","docs_no_match":"일치하는 문서 없음","docs_none":"문서 없음","docs_try":"다른 키워드로 검색","docs_admin_none":"아직 가이드가 게시되지 않았습니다.","invites_title":"초대 코드 및 커미션 통계를 확인하세요.","invites_sub":"초대 코드를 공유하고 추천 현황을 추적하세요.","generate_code":"코드 생성","registered_users":"등록 사용자","valid_commission":"유효 커미션","pending_commission":"대기 중 커미션","commission_rate":"비율","invite_code_label":"초대 코드","visits":"방문","copy_link":"링크 복사","invites_empty":"초대 코드 없음","invites_empty_sub":"오른쪽 위 버튼을 클릭하여 첫 코드를 생성하세요.","tickets_title":"문제를 제출하고 답변을 확인하세요.","new_ticket":"새 티켓","ticket_subject":"제목","ticket_level":"우선순위","ticket_level_0":"일반","ticket_level_1":"긴급","ticket_level_2":"매우 긴급","ticket_detail":"상세 내용","ticket_detail_ph":"기기, 클라이언트 및 오류 현상을 설명해주세요","cancel":"취소","submit_ticket":"티켓 제출","ticket_open":"처리 중","ticket_closed":"종료","ticket_new_reply":"새 답변","ticket_waiting":"대기 중","ticket_reply":"답변","send_reply":"답변 전송","close_ticket":"티켓 종료","traffic_title":"일일 업로드 및 다운로드 사용량을 확인하세요.","settings":"설정","settings_sub":"이 설정은 현재 브라우저에 저장됩니다","ui_theme":"테마","support":"고객지원","open_support":"고객지원 열기","not_configured":"설정되지 않음","frontend_version":"프론트엔드 버전","login_status":"로그인 상태","security":"보안","security_sub":"정기적으로 비밀번호를 변경하면 계정을 보호할 수 있습니다","current_password":"현재 비밀번호","new_password_label":"새 비밀번호","confirm_new_password":"새 비밀번호 확인","change_password":"비밀번호 변경","changing":"변경 중…","copy":"복사","copied":"복사됨","operation_failed":"작업 실패","operation_success":"작업 성공","long_term":"무기한","loading":"로드 중…","lang":"언어","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"계정","logout_action":"로그아웃","forgot_desc":"가입한 이메일로 코드를 받은 후 새 비밀번호를 설정하세요.","please_enter_email":"먼저 이메일을 입력해주세요"},"vi":{"tagline":"Kết nối rõ ràng, hiện đại và ổn định","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"Hàng tháng","quarter_price":"Hàng quý","half_year_price":"Nửa năm","year_price":"Hàng năm","two_year_price":"2 năm","three_year_price":"3 năm","onetime_price":"Một lần","reset_price":"Đặt lại dữ liệu","status_pending":"Chờ thanh toán","status_processing":"Đang kích hoạt","status_completed":"Hoàn tất","status_cancelled":"Đã hủy","request_failed":"Yêu cầu thất bại, vui lòng thử lại sau","nav_main":"Chính","nav_dashboard":"Bảng điều khiển","nav_docs":"Tài liệu","nav_subscription":"Đăng ký","nav_nodes":"Máy chủ","nav_plans":"Gói dịch vụ","nav_finance":"Tài chính","nav_orders":"Đơn hàng","nav_invites":"Mời bạn","nav_user":"Người dùng","nav_account":"Tài khoản","nav_tickets":"Hỗ trợ","nav_traffic":"Lưu lượng","help_title":"Cần trợ giúp?","help_text":"Liên hệ với chúng tôi nếu gặp vấn đề kết nối hoặc đăng ký.","help_contact":"Liên hệ hỗ trợ","logout":"Đăng xuất","theme_toggle":"Chuyển chủ đề","notifications":"Thông báo","mobile_nav":"Menu mobile","mobile_home":"Trang chủ","mobile_sub":"Gói","mobile_docs":"Tài liệu","mobile_ticket":"Hỗ trợ","mobile_me":"Tôi","auth_welcome":"Chào mừng trở lại","auth_create":"Tạo tài khoản","auth_welcome_sub":"Quản lý đăng ký, lưu lượng và gói dịch vụ sau khi đăng nhập.","auth_create_sub":"Bắt đầu chỉ trong vài bước.","email":"Email","password":"Mật khẩu","password_min":"Ít nhất 8 ký tự","remember":"Giữ đăng nhập","forgot_password":"Quên mật khẩu","register_submit":"Đăng ký","login_submit":"Đăng nhập","has_account":"Đã có tài khoản?","direct_login":"Đăng nhập","no_account":"Chưa có tài khoản?","free_register":"Đăng ký miễn phí","invite_code":"Mã mời","optional":" (tùy chọn)","invite_placeholder":"Nhập mã mời","invite_optional_ph":"Mã mời (tùy chọn)","email_code":"Mã xác minh email","code_placeholder":"Mã 6 chữ số","send_code":"Gửi mã","register_agree":"Tạo tài khoản đồng nghĩa với việc đồng ý với Điều khoản và Chính sách bảo mật.","new_password":"Mật khẩu mới","confirm_password":"Xác nhận mật khẩu","confirm_password_ph":"Nhập lại mật khẩu mới","reset_password":"Đặt lại mật khẩu","remember_password":"Nhớ mật khẩu?","back_login":"Quay lại đăng nhập","captcha_human":"Vui lòng xác minh bạn là người thật","captcha_loading":"Đang tải xác minh…","captcha_recaptcha":"Trang này được bảo vệ bởi reCAPTCHA.","captcha_failed":"Tải xác minh thất bại, vui lòng làm mới.","captcha_required":"Vui lòng hoàn tất xác minh","dashboard_loading":"Đang tải dữ liệu kết nối…","no_subscribe":"Chưa có gói","no_active_subscribe":"Chưa có gói hoạt động","user":"Người dùng","current_subscribe":"Gói hiện tại","remaining_traffic":"Dữ liệu còn lại","subscribe_expire":"Hết hạn","account_balance":"Số dư","no_subscribe_url":"Chưa có URL đăng ký","device_count":"Thiết bị","speed_limit":"Giới hạn tốc độ","subscribe_status":"Trạng thái","effective":"Hoạt động","plans_title":"Chọn gói phù hợp","plans_sub":"Mọi giá cả và dung lượng đều được liệt kê rõ ràng.","plans_period_tip":"Chọn chu kỳ thanh toán; bạn có thể xem đơn hàng trong tài khoản.","plans_none":"Chưa có gói bán","plans_none_sub":"Quản trị viên chưa đăng gói dịch vụ.","unlimited_speed":"Không giới hạn tốc độ","devices":" thiết bị","plan_feature":"Đường truyền ổn định và đăng ký dễ dàng","select_plan":"Chọn gói","period":"Chu kỳ","orders_title":"Xem lịch sử mua và trạng thái đơn hàng.","buy_plan":"Mua gói","total_orders":"Tổng đơn","paid_amount":"Đã thanh toán","pending_orders":"Chờ thanh toán","completed_orders":"Hoàn tất","order":"Đơn hàng","amount":"Số tiền","create_time":"Ngày tạo","status":"Trạng thái","action":"Thao tác","orders_empty":"Đơn hàng sẽ hiển thị tại đây sau khi bạn chọn gói.","search_placeholder":"Nhập từ khóa","docs_guide":"Hướng dẫn","docs_no_match":"Không có tài liệu phù hợp","docs_none":"Chưa có tài liệu","docs_try":"Thử từ khóa khác","docs_admin_none":"Quản trị viên chưa đăng hướng dẫn.","invites_title":"Xem mã mời và thống kê hoa hồng.","invites_sub":"Chia sẻ mã mời và theo dõi giới thiệu.","generate_code":"Tạo mã","registered_users":"Người dùng đã đăng ký","valid_commission":"Hoa hồng hợp lệ","pending_commission":"Hoa hồng chờ","commission_rate":"Tỷ lệ","invite_code_label":"Mã mời","visits":"Lượt truy cập","copy_link":"Sao chép liên kết","invites_empty":"Chưa có mã mời","invites_empty_sub":"Nhấn nút ở góc trên bên phải để tạo mã đầu tiên.","tickets_title":"Gửi vấn đề và xem phản hồi.","new_ticket":"Tạo yêu cầu","ticket_subject":"Chủ đề","ticket_level":"Mức độ","ticket_level_0":"Bình thường","ticket_level_1":"Khẩn","ticket_level_2":"Rất khẩn","ticket_detail":"Chi tiết","ticket_detail_ph":"Mô tả thiết bị, ứng dụng và hiện tượng lỗi","cancel":"Hủy","submit_ticket":"Gửi yêu cầu","ticket_open":"Đang xử lý","ticket_closed":"Đã đóng","ticket_new_reply":"Có phản hồi mới","ticket_waiting":"Đang chờ","ticket_reply":"Phản hồi","send_reply":"Gửi phản hồi","close_ticket":"Đóng yêu cầu","traffic_title":"Xem lưu lượng upload và download hàng ngày.","settings":"Tùy chọn","settings_sub":"Các cài đặt này được lưu trong trình duyệt","ui_theme":"Chủ đề","support":"Hỗ trợ","open_support":"Mở hỗ trợ","not_configured":"Chưa cấu hình","frontend_version":"Phiên bản giao diện","login_status":"Trạng thái đăng nhập","security":"Bảo mật","security_sub":"Đổi mật khẩu định kỳ giúp bảo vệ tài khoản","current_password":"Mật khẩu hiện tại","new_password_label":"Mật khẩu mới","confirm_new_password":"Xác nhận mật khẩu mới","change_password":"Đổi mật khẩu","changing":"Đang đổi…","copy":"Sao chép","copied":"Đã sao chép","operation_failed":"Thao tác thất bại","operation_success":"Thao tác thành công","long_term":"Vĩnh viễn","loading":"Đang tải…","lang":"Ngôn ngữ","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"Tài khoản","logout_action":"Đăng xuất","forgot_desc":"Nhận mã qua email đăng ký, sau đó đặt mật khẩu mới.","please_enter_email":"Vui lòng nhập email trước"},"fa":{"tagline":"اتصال روشن، مدرن و پایدار","footer_default":"Powered by Argon-Xboard · Xboard","month_price":"ماهانه","quarter_price":"سه ماهه","half_year_price":"شش ماهه","year_price":"سالانه","two_year_price":"دو ساله","three_year_price":"سه ساله","onetime_price":"یکباره","reset_price":"بازنشانی داده","status_pending":"در انتظار پرداخت","status_processing":"در حال راه‌اندازی","status_completed":"تکمیل","status_cancelled":"لغو","request_failed":"درخواست ناموفق، لطفاً بعداً دوباره امتحان کنید","nav_main":"اصلی","nav_dashboard":"داشبورد","nav_docs":"مستندات","nav_subscription":"اشتراک","nav_nodes":"گره‌ها","nav_plans":"خرید طرح","nav_finance":"مالی","nav_orders":"سفارش‌ها","nav_invites":"دعوت‌ها","nav_user":"کاربر","nav_account":"حساب کاربری","nav_tickets":"تیکت‌ها","nav_traffic":"ترافیک","help_title":"نیاز به کمک دارید؟","help_text":"در صورت بروز مشکل در اتصال یا اشتراک، با ما تماس بگیرید.","help_contact":"تماس با پشتیبانی","logout":"خروج","theme_toggle":"تغییر تم","notifications":"اعلان‌ها","mobile_nav":"منوی موبایل","mobile_home":"خانه","mobile_sub":"اشتراک","mobile_docs":"مستندات","mobile_ticket":"تیکت","mobile_me":"من","auth_welcome":"خوش آمدید","auth_create":"ایجاد حساب","auth_welcome_sub":"پس از ورود، اشتراک، ترافیک و طرح‌ها را مدیریت کنید.","auth_create_sub":"در چند مرحله شروع کنید.","email":"ایمیل","password":"رمز عبور","password_min":"حداقل ۸ کاراکتر","remember":"مرا به خاطر بسپار","forgot_password":"فراموشی رمز عبور","register_submit":"ثبت‌نام","login_submit":"ورود","has_account":"حساب دارید؟","direct_login":"ورود","no_account":"حساب ندارید؟","free_register":"ثبت‌نام رایگان","invite_code":"کد دعوت","optional":" (اختیاری)","invite_placeholder":"کد دعوت را وارد کنید","invite_optional_ph":"کد دعوت (اختیاری)","email_code":"کد ایمیل","code_placeholder":"کد ۶ رقمی","send_code":"ارسال کد","register_agree":"ایجاد حساب به معنی پذیرش شرایط خدمات و سیاست حریم خصوصی است.","new_password":"رمز عبور جدید","confirm_password":"تأیید رمز عبور","confirm_password_ph":"رمز عبور جدید را دوباره وارد کنید","reset_password":"بازنشانی رمز عبور","remember_password":"رمز عبور را به خاطر دارید؟","back_login":"بازگشت به ورود","captcha_human":"لطفاً تأیید کنید انسان هستید","captcha_loading":"در حال بارگذاری بررسی امنیتی…","captcha_recaptcha":"این صفحه توسط reCAPTCHA محافظت می‌شود.","captcha_failed":"بارگذاری بررسی امنیتی ناموفق بود، لطفاً صفحه را تازه کنید.","captcha_required":"لطفاً ابتدا تأیید انسانی را کامل کنید","dashboard_loading":"در حال بارگذاری داده‌های اتصال…","no_subscribe":"بدون اشتراک","no_active_subscribe":"بدون اشتراک فعال","user":"کاربر","current_subscribe":"اشتراک فعلی","remaining_traffic":"ترافیک باقیمانده","subscribe_expire":"انقضا","account_balance":"موجودی","no_subscribe_url":"بدون URL اشتراک","device_count":"تعداد دستگاه","speed_limit":"محدودیت سرعت","subscribe_status":"وضعیت","effective":"فعال","plans_title":"طرح مناسب را انتخاب کنید","plans_sub":"همه قیمت‌ها و حجم‌ها به وضوح ذکر شده‌اند.","plans_period_tip":"دوره پرداخت را انتخاب کنید؛ سفارش‌ها را در حساب خود ببینید.","plans_none":"هیچ طرحی برای فروش نیست","plans_none_sub":"مدیر هنوز طرحی منتشر نکرده است.","unlimited_speed":"سرعت نامحدود","devices":" دستگاه","plan_feature":"مسیر پایدار و اشتراک آسان","select_plan":"انتخاب طرح","period":"دوره","orders_title":"تاریخچه خرید و وضعیت سفارش‌ها را بررسی کنید.","buy_plan":"خرید طرح","total_orders":"کل سفارش‌ها","paid_amount":"مبلغ پرداخت‌شده","pending_orders":"در انتظار پرداخت","completed_orders":"تکمیل‌شده","order":"سفارش","amount":"مبلغ","create_time":"زمان ایجاد","status":"وضعیت","action":"عملیات","orders_empty":"پس از انتخاب طرح، سفارش‌ها اینجا نمایش داده می‌شوند.","search_placeholder":"کلیدواژه را وارد کنید","docs_guide":"راهنما","docs_no_match":"مستندی یافت نشد","docs_none":"مستندی نیست","docs_try":"کلیدواژه دیگری امتحان کنید","docs_admin_none":"مدیر هنوز راهنمایی منتشر نکرده است.","invites_title":"کدهای دعوت و آمار کمیسیون را ببینید.","invites_sub":"کدهای دعوت را به اشتراک بگذارید و معرفی‌ها را پیگیری کنید.","generate_code":"ایجاد کد","registered_users":"کاربران ثبت‌شده","valid_commission":"کمیسیون معتبر","pending_commission":"کمیسیون در انتظار","commission_rate":"نرخ","invite_code_label":"کد دعوت","visits":"بازدید","copy_link":"کپی لینک","invites_empty":"هنوز کد دعوتی ندارید","invites_empty_sub":"برای ایجاد اولین کد روی دکمه بالا کلیک کنید.","tickets_title":"مشکل را ارسال کنید و پاسخ‌ها را ببینید.","new_ticket":"تیکت جدید","ticket_subject":"موضوع","ticket_level":"اولویت","ticket_level_0":"عادی","ticket_level_1":"فوری","ticket_level_2":"بسیار فوری","ticket_detail":"جزئیات","ticket_detail_ph":"دستگاه، کلاینت و پدیده خطا را شرح دهید","cancel":"لغو","submit_ticket":"ارسال تیکت","ticket_open":"در حال بررسی","ticket_closed":"بسته‌شده","ticket_new_reply":"پاسخ جدید","ticket_waiting":"در انتظار","ticket_reply":"پاسخ","send_reply":"ارسال پاسخ","close_ticket":"بستن تیکت","traffic_title":"مصرف روزانه آپلود و دانلود را بررسی کنید.","settings":"تنظیمات","settings_sub":"این تنظیمات در این مرورگر ذخیره می‌شوند","ui_theme":"تم","support":"پشتیبانی","open_support":"باز کردن پشتیبانی","not_configured":"پیکربندی نشده","frontend_version":"نسخه رابط کاربری","login_status":"وضعیت ورود","security":"امنیت","security_sub":"تغییر منظم رمز عبور از حساب شما محافظت می‌کند","current_password":"رمز عبور فعلی","new_password_label":"رمز عبور جدید","confirm_new_password":"تأیید رمز عبور جدید","change_password":"تغییر رمز عبور","changing":"در حال تغییر…","copy":"کپی","copied":"کپی شد","operation_failed":"عملیات ناموفق","operation_success":"عملیات موفق","long_term":"دائمی","loading":"در حال بارگذاری…","lang":"زبان","lang_zh_CN":"简体中文","lang_zh_TW":"繁體中文","lang_en":"English","lang_ja":"日本語","lang_ko":"한국어","lang_vi":"Tiếng Việt","lang_fa":"فارسی","account_center":"حساب کاربری","logout_action":"خروج","forgot_desc":"کد را به ایمیل ثبت‌شده دریافت کنید، سپس رمز عبور جدید را تنظیم کنید.","please_enter_email":"لطفاً ابتدا ایمیل را وارد کنید"}};
+  function t(key, fallback = '') {
+    const dict = i18n[currentLang] || i18n['zh-CN'];
+    return dict[key] || i18n['en'][key] || i18n['zh-CN'][key] || fallback;
+  }
+  function setLang(code) {
+    currentLang = code;
+    state.lang = code;
+    localStorage.setItem(langKey, code);
+    document.documentElement.lang = code;
+    render();
+  }
+
   const app = document.getElementById('app');
   const config = Object.assign({
-    title: 'Xboard', brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验',
-    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: 'Powered by Argon-Xboard · Xboard'
+    title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
+    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default')
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -12,18 +38,19 @@
   const themeKey = 'nebulax_color_mode';
   const state = {
     auth: localStorage.getItem(storageKey) || '',
+    lang: initialLang,
     guest: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
     docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
     loading: false, captchaToken: '', renderId: 0
   };
 
   const periodMap = {
-    month_price: '月付', quarter_price: '季付', half_year_price: '半年付',
-    year_price: '年付', two_year_price: '两年付', three_year_price: '三年付',
-    onetime_price: '一次性', reset_price: '重置流量'
+    month_price: t('month_price'), quarter_price: t('quarter_price'), half_year_price: t('half_year_price'),
+    year_price: t('year_price'), two_year_price: t('two_year_price'), three_year_price: t('three_year_price'),
+    onetime_price: t('onetime_price'), reset_price: t('reset_price')
   };
   const orderStatus = {
-    0: ['待支付', 'warning'], 1: ['开通中', 'warning'], 2: ['已完成', 'success'], 3: ['已取消', 'danger']
+    0: [t('status_pending'), 'warning'], 1: [t('status_processing'), 'warning'], 2: [t('status_completed'), 'success'], 3: [t('status_cancelled'), 'danger']
   };
 
   applyBrandColor(config.primaryColor);
@@ -82,6 +109,7 @@
       ticket: '<path d="M4 4h16v13H8l-4 4V4z"/><path d="M8 9h8M8 13h5"/>',
       user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
       moon: '<path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5 8.5 8.5 0 1 0 20.5 14.3z"/>',
+      globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
       sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/>',
       logout: '<path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/>',
       mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
@@ -133,7 +161,7 @@
       if (!location.hash.startsWith('#/login')) location.hash = '#/login';
     }
     if (!response.ok || result.status === 'fail') {
-      const message = result.message || result.error || '请求失败，请稍后重试';
+      const message = result.message || result.error || t('request_failed');
       throw new Error(Array.isArray(message) ? message.join('，') : message);
     }
     return Object.prototype.hasOwnProperty.call(result, 'data') ? result.data : result;
@@ -201,7 +229,7 @@
   }
   function money(cents) { return `¥${(Number(cents || 0) / 100).toFixed(Number(cents || 0) % 100 ? 2 : 0)}`; }
   function date(value) {
-    if (!value) return '长期有效';
+    if (!value) return t('long_term');
     const stamp = Number(value) < 1e12 ? Number(value) * 1000 : Number(value);
     return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(stamp));
   }
@@ -221,7 +249,7 @@
     if (currentDay > Number(resetDay)) target = new Date(currentYear, currentMonth + 1, Number(resetDay));
     return Math.ceil((target - now) / 86400000);
   }
-  function toast(message, type = 'success', title = type === 'error' ? '操作失败' : '操作成功') {
+  function toast(message, type = 'success', title = type === 'error' ? t('operation_failed') : t('operation_success')) {
     const node = document.createElement('div');
     node.className = `toast ${type}`;
     node.innerHTML = `${icon(type === 'error' ? 'info' : 'check')}<div><b>${e(title)}</b><p>${e(message)}</p></div>`;
@@ -244,39 +272,49 @@
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
-        <nav class="nav" aria-label="主导航">
-          ${nav('dashboard', '仪表盘', 'dashboard')}
-          ${nav('docs', '使用文档', 'docs')}
-          <p class="nav-label">订阅</p>
-          ${nav('nodes', '节点列表', 'nodes')}
-          ${nav('plans', '购买订阅', 'plans')}
-          <p class="nav-label">财务</p>
-          ${nav('orders', '我的订单', 'orders')}
-          ${nav('invites', '我的邀请', 'invite')}
-          <p class="nav-label">用户</p>
-          ${nav('account', '个人中心', 'user')}
-          ${nav('tickets', '我的工单', 'ticket')}
-          ${nav('traffic', '流量明细', 'chart')}
+        <nav class="nav" aria-label=t('nav_main')>
+          ${nav('dashboard', t('nav_dashboard'), 'dashboard')}
+          ${nav('docs', t('nav_docs'), 'docs')}
+          <p class="nav-label">${t('nav_subscription')}</p>
+          ${nav('nodes', t('nav_nodes'), 'nodes')}
+          ${nav('plans', t('nav_plans'), 'plans')}
+          <p class="nav-label">${t('nav_finance')}</p>
+          ${nav('orders', t('nav_orders'), 'orders')}
+          ${nav('invites', t('nav_invites'), 'invite')}
+          <p class="nav-label">${t('nav_user')}</p>
+          ${nav('account', t('nav_account'), 'user')}
+          ${nav('tickets', t('nav_tickets'), 'ticket')}
+          ${nav('traffic', t('nav_traffic'), 'chart')}
         </nav>
         <div class="sidebar-bottom">
-          ${config.supportUrl ? `<div class="support-card"><b>需要一点帮助？</b><p>遇到连接或订阅问题，可以随时联系我们。</p><a class="btn btn-secondary btn-sm" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${icon('support')} 联系客服</a></div>` : ''}
-          <button class="nav-link" type="button" data-action="logout">${icon('logout')}<span>退出登录</span></button>
+          ${config.supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
+          <button class="nav-link" type="button" data-action="logout">${icon('logout')}<span>${t('logout')}</span></button>
         </div>
       </aside>
       <main class="main">
-        <div class="mobile-brand">${brand()}<button class="icon-btn" data-action="theme" aria-label="切换深浅色">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button></div>
+        <div class="mobile-brand">${brand()}<button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button></div>
         <header class="topbar">
           <div class="topbar-title"><strong>${e(title)}</strong><span>${e(subtitle || config.tagline)}</span></div>
           <div class="topbar-actions">
-            <button class="icon-btn" data-action="theme" aria-label="切换深浅色">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn${notify}" data-action="go-tickets" aria-label="查看通知">${icon('bell')}</button>
-            <a class="avatar" href="#/account" title="${e(user.email || '')}">${e(initials(user.email))}</a>
+            <div class="dropdown" data-dropdown="lang">
+              <button class="topbar-btn" type="button" data-dropdown-toggle="lang" aria-haspopup="true" aria-expanded="false">${icon('globe')}<span>${e((langList.find(l => l.code === state.lang) || {}).name || t('lang_zh_CN'))}</span></button>
+              <div class="dropdown-menu" data-dropdown-menu="lang">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
+            </div>
+            <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
+            <button class="icon-btn${notify}" data-action="go-tickets" aria-label="${t('notifications')}">${icon('bell')}</button>
+            <div class="dropdown" data-dropdown="user">
+              <button class="avatar" type="button" data-dropdown-toggle="user" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
+              <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user">
+                <a class="dropdown-item" href="#/account">${icon('user')} ${t('account_center')}</a>
+                <button type="button" class="dropdown-item" data-action="logout">${icon('logout')} ${t('logout_action')}</button>
+              </div>
+            </div>
           </div>
         </header>
         <div class="content">${content}</div>
       </main>
-      <nav class="mobile-nav" aria-label="移动端导航">
-        ${nav('dashboard', '首页', 'dashboard')}${nav('plans', '订阅', 'plans')}${nav('docs', '文档', 'docs')}${nav('tickets', '工单', 'ticket')}${nav('account', '我的', 'user')}
+      <nav class="mobile-nav" aria-label="${t('mobile_nav')}">
+        ${nav('dashboard', t('mobile_home'), 'dashboard')}${nav('plans', t('nav_subscription'), 'plans')}${nav('docs', t('mobile_docs'), 'docs')}${nav('tickets', t('mobile_ticket'), 'ticket')}${nav('account', t('mobile_me'), 'user')}
       </nav>
     </div>`;
   }
@@ -284,7 +322,7 @@
   function authVisual() {
     return `<aside class="auth-visual" aria-hidden="true">
       <div class="orbit"></div>
-      <div class="visual-copy"><span class="visual-kicker">● LIVE NETWORK</span><h2>${e(config.tagline)}</h2><p>${e(state.guest.app_description || config.description || '一个专注体验的网络服务控制中心。')}</p><div class="visual-stats"><div><b>99.9%</b><span>服务可用性</span></div><div><b>24/7</b><span>持续连接</span></div><div><b>1-Click</b><span>快速订阅</span></div></div></div>
+      <div class="visual-copy"><span class="visual-kicker">● LIVE NETWORK</span><h2>${e(config.tagline)}</h2><p>${e(state.guest.app_description || config.description || t('app_desc_default'))}</p><div class="visual-stats"><div><b>99.9%</b><span>${t('visual_uptime')}</span></div><div><b>24/7</b><span>${t('visual_connect')}</span></div><div><b>1-Click</b><span>${t('visual_subscribe')}</span></div></div></div>
     </aside>`;
   }
 
@@ -295,22 +333,22 @@
     const inviteForce = register && Number(guest.is_invite_force) === 1;
     const urlCode = register ? (new URLSearchParams((location.hash.split('?')[1] || '')).get('code') || '') : '';
     const authFields = register ? `
-      <div class="field"><label for="invite_code">邀请码${inviteForce ? '' : '（选填）'}</label><input class="input" id="invite_code" name="invite_code" autocomplete="off" ${inviteForce ? 'required' : ''} value="${e(urlCode)}" placeholder="${inviteForce ? '请输入邀请码' : '邀请码(选填)'}"></div>
-      ${emailVerify ? `<div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="6 位验证码"><button class="btn btn-secondary" type="button" data-action="send-code">发送验证码</button></div></div>` : ''}` : '';
+      <div class="field"><label for="invite_code">邀请码${inviteForce ? '' : t('optional')}</label><input class="input" id="invite_code" name="invite_code" autocomplete="off" ${inviteForce ? 'required' : ''} value="${e(urlCode)}" placeholder="${inviteForce ? t('invite_placeholder') : t('invite_optional_ph')}"></div>
+      ${emailVerify ? `<div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="${t('code_placeholder')}"><button class="btn btn-secondary" type="button" data-action="send-code">${t('send_code')}</button></div></div>` : ''}` : '';
     app.innerHTML = `<div class="auth-shell">
       <section class="auth-panel">
         ${brand()}
         <div class="auth-main">
           <p class="eyebrow">${register ? 'Create account' : 'Welcome back'}</p>
-          <h1>${register ? '创建你的账户' : '欢迎回来'}</h1>
-          <p>${register ? '几步即可开始，连接体验从这里变得更轻盈。' : e(guest.app_description || config.description || '登录后管理订阅、查看流量与选择套餐。')}</p>
+          <h1>${register ? t('auth_create') : t('auth_welcome')}</h1>
+          <p>${register ? t('auth_create_sub') : e(guest.app_description || config.description || t('auth_welcome_sub'))}</p>
           <form class="form" id="auth-form" data-mode="${mode}">
-            <div class="field"><label for="email">邮箱地址</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
-            <div class="field"><label for="password">登录密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="${register ? 'new-password' : 'current-password'}" required placeholder="至少 8 位字符"></div></div>
+            <div class="field"><label for="email">${t('email')}</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
+            <div class="field"><label for="password">${t('password')}</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="${register ? 'new-password' : 'current-password'}" required placeholder="${t('password_min')}"></div></div>
             ${authFields}
             <div id="captcha-box"></div>
             ${!register ? `<div class="form-meta"><label class="check"><input type="checkbox" checked> 保持登录</label><a class="text-link" href="#/forgot">找回密码</a></div>` : `<p class="field-hint">创建账户即代表你同意站点服务条款与隐私政策。</p>`}
-            <button class="btn btn-primary btn-block" type="submit">${register ? '注册并进入' : '登录控制中心'} ${icon('arrow')}</button>
+            <button class="btn btn-primary btn-block" type="submit">${register ? '注册并进入' : t('login_submit')} ${icon('arrow')}</button>
           </form>
           <p class="field-hint" style="margin-top:20px;text-align:center">${register ? '已经有账户？ <a class="text-link" href="#/login">直接登录</a>' : `还没有账户？ <a class="text-link" href="#/register">免费注册</a>`}</p>
         </div>
@@ -328,12 +366,12 @@
         <div class="auth-main">
           <p class="eyebrow">Reset password</p>
           <h1>找回密码</h1>
-          <p>通过注册邮箱接收验证码，验证后即可设置新的登录密码。</p>
+          <p>${t('forgot_desc')}</p>
           <form class="form" id="forgot-form">
-            <div class="field"><label for="email">邮箱地址</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
-            <div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="6 位验证码"><button class="btn btn-secondary" type="button" data-action="send-code">发送验证码</button></div></div>
-            <div class="field"><label for="password">新密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="至少 8 位字符"></div></div>
-            <div class="field"><label for="password_confirmation">确认密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required placeholder="再次输入新密码"></div></div>
+            <div class="field"><label for="email">${t('email')}</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
+            <div class="field"><label for="email_code">邮箱验证码</label><div class="verify-row"><input class="input" id="email_code" name="email_code" inputmode="numeric" maxlength="6" required placeholder="${t('code_placeholder')}"><button class="btn btn-secondary" type="button" data-action="send-code">${t('send_code')}</button></div></div>
+            <div class="field"><label for="password">新密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="new-password" required placeholder="${t('password_min')}"></div></div>
+            <div class="field"><label for="password_confirmation">确认密码</label><div class="input-wrap">${icon('lock')}<input class="input" id="password_confirmation" name="password_confirmation" type="password" minlength="8" autocomplete="new-password" required placeholder="${t('confirm_password_ph')}"></div></div>
             <button class="btn btn-primary btn-block" type="submit">重置密码 ${icon('arrow')}</button>
           </form>
           <p class="field-hint" style="margin-top:20px;text-align:center">想起密码了？ <a class="text-link" href="#/login">返回登录</a></p>
@@ -389,7 +427,7 @@
       const token = await window.grecaptcha.execute(guest.recaptcha_v3_site_key, { action });
       return { recaptcha_v3_token: token };
     }
-    if (!state.captchaToken) throw new Error('请先完成人机验证');
+    if (!state.captchaToken) throw new Error(t('captcha_required'));
     return guest.captcha_type === 'turnstile' ? { turnstile_token: state.captchaToken } : { recaptcha_data: state.captchaToken };
   }
 
@@ -409,60 +447,60 @@
       const total = Number(subscribe.transfer_enable || 0);
       const percent = total ? Math.min(100, Math.round(used / total * 100)) : 0;
       const remaining = Math.max(0, total - used);
-      const planName = subscribe.plan?.name || '暂无订阅';
+      const planName = subscribe.plan?.name || t('no_subscribe');
       const expireDays = daysUntil(subscribe.expired_at);
       const resetDays = daysUntilReset(subscribe.reset_day);
       const expireMeta = subscribe.expired_at
-        ? `于 ${date(subscribe.expired_at)} 到期，距离到期还有 ${expireDays} 天${resetDays !== null ? `，${resetDays} 日后重置流量` : ''}`
-        : '暂无有效订阅';
-      const firstName = (user.email || '用户').split('@')[0];
+        ? `${t('expires_at').replace('{date}', date(subscribe.expired_at))}，${t('expires_days_remaining').replace('{days}', expireDays)}${resetDays !== null ? `，${t('reset_days').replace('{days}', resetDays)}` : ''}`
+        : t('no_active_subscribe');
+      const firstName = (user.email || t('nav_user')).split('@')[0];
       const announcement = config.announcement || state.notices[0]?.content || '';
       const content = `<div class="dashboard-header">
         <div class="dashboard-header-body">
           <div>
             <p class="eyebrow">Dashboard</p>
-            <h1>你好，${e(firstName)}</h1>
-            <p>这里是你的连接状态与订阅概览。</p>
+            <h1>${t('dashboard_greeting')}${e(firstName)}</h1>
+            <p>${t('dashboard_subtitle')}</p>
           </div>
-          <a class="btn btn-light" href="#/plans">查看套餐</a>
+          <a class="btn btn-light" href="#/plans">${t('view_plan')}</a>
         </div>
       </div>
       ${announcement ? `<div class="announcement">${icon('bell')}<p>${e(announcement)}</p></div>` : ''}
       <div class="grid grid-4">
-        ${statCard('wifi', planName, '当前订阅', 'bg-gradient-primary')}
-        ${statCard('chart', bytes(remaining), '剩余流量', 'bg-gradient-success')}
-        ${statCard('calendar', date(subscribe.expired_at), '订阅到期', 'bg-gradient-info')}
-        ${statCard('wallet', money(user.balance), '账户余额', 'bg-gradient-warning')}
+        ${statCard('wifi', planName, t('current_subscribe'), 'bg-gradient-primary')}
+        ${statCard('chart', bytes(remaining), t('remaining_traffic'), 'bg-gradient-success')}
+        ${statCard('calendar', date(subscribe.expired_at), t('subscribe_expire'), 'bg-gradient-info')}
+        ${statCard('wallet', money(user.balance), t('account_balance'), 'bg-gradient-warning')}
       </div>
       <div class="grid grid-3" style="margin-top:24px">
         <section class="card span-2 subscription-card">
           <div class="card-body">
-            <h2 class="subscription-title">我的订阅</h2>
+            <h2 class="subscription-title">${t('my_subscribe')}</h2>
             <h3 class="subscription-plan-name">${e(planName)}</h3>
             <p class="subscription-meta">${e(expireMeta)}</p>
             <div class="subscription-progress-row">
-              <span class="subscription-tag">已用流量</span>
+              <span class="subscription-tag">${t('used_traffic')}</span>
               <span class="subscription-percent">${percent}%</span>
             </div>
             <div class="progress subscription-progress"><span style="width:${percent}%"></span></div>
-            <p class="subscription-usage">已用 ${bytes(used)} / 总计 ${bytes(total)}</p>
+            <p class="subscription-usage">${t('used')} ${bytes(used)} / ${t('total')} ${bytes(total)}</p>
           </div>
         </section>
         <section class="card subscribe-card">
-          <div class="card-header"><div><h2>订阅链接</h2><p>添加到你的客户端</p></div></div>
+          <div class="card-header"><div><h2>${t('subscribe_url')}</h2><p>${t('subscribe_url_sub')}</p></div></div>
           <div class="card-body">
             <div class="subscribe-box">
               <span class="subscribe-url">${e(subscribe.subscribe_url || '暂无订阅链接')}</span>
-              <button class="btn btn-primary btn-sm" data-action="copy-sub" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('copy')} 复制</button>
+              <button class="btn btn-primary btn-sm" data-action="copy-sub" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('copy')} ${t('copy')}</button>
             </div>
             <div class="info-list">
-              <div class="info-item"><span>设备数量</span><b>${subscribe.device_limit || '不限'}</b></div>
-              <div class="info-item"><span>速度上限</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : '不限速'}</b></div>
-              <div class="info-item"><span>订阅状态</span><b><span class="status success">正常</span></b></div>
+              <div class="info-item"><span>${t('device_count')}</span><b>${subscribe.device_limit || '不限'}</b></div>
+              <div class="info-item"><span>${t('speed_limit')}</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : t('unlimited_speed')}</b></div>
+              <div class="info-item"><span>${t('subscribe_status')}</span><b><span class="status success">${t('status_normal')}</span></b></div>
             </div>
             <div class="subscribe-actions">
-              <button class="btn btn-warning btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} 重置订阅</button>
-              <span class="hint-text">重新生成订阅链接，旧链接将失效</span>
+              <button class="btn btn-warning btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} ${t('reset_subscribe')}</button>
+              <span class="hint-text">${t('reset_hint')}</span>
             </div>
           </div>
         </section>
@@ -472,14 +510,14 @@
   }
 
   async function renderPlans(id) {
-    app.innerHTML = shell(`${pageHead('Plans', '选择适合你的方案', '所有价格与流量都清楚列出，没有藏起来的小字。')}<div class="plan-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, '购买订阅');
+    app.innerHTML = shell(`${pageHead('Plans', t('plans_title'), t('plans_sub'))}<div class="plan-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, t('nav_plans'));
     try {
       const plans = await api(state.auth ? '/user/plan/fetch' : '/guest/plan/fetch');
       if (id !== state.renderId) return;
       state.plans = (Array.isArray(plans) ? plans : []).filter(plan => plan.show !== false);
       const cards = state.plans.map((plan, index) => planCard(plan, index === 1)).join('');
-      const content = `${pageHead('Plans', '选择适合你的方案', '按需求选择周期，随时可以在账户中查看订单。')}<div class="plan-grid">${cards || empty('暂时没有可售套餐', '管理员还没有发布订阅套餐。')}</div>`;
-      app.innerHTML = shell(content, '购买订阅');
+      const content = `${pageHead('Plans', t('plans_title'), t('plans_period_tip'))}<div class="plan-grid">${cards || empty(t('plans_none'), t('plans_none_sub'))}</div>`;
+      app.innerHTML = shell(content, t('nav_plans'));
     } catch (error) { renderError(error); }
   }
 
@@ -492,14 +530,14 @@
       <div class="plan-card-body">
         <h2 class="plan-name">${e(plan.name)}</h2><div class="plan-tags">${tags.map(tag => `<span class="tag">${e(tag)}</span>`).join('')}</div>
         <div class="plan-price">${first ? `<b>${money(plan[first])}</b><span> / ${e(periodMap[first])}</span>` : '<b>—</b>'}</div>
-        <ul class="plan-features"><li>${icon('check')} ${e(plan.transfer_enable || 0)} GB 套餐流量</li><li>${icon('check')} ${plan.speed_limit ? `${e(plan.speed_limit)} Mbps` : '不限速'} 网络</li><li>${icon('check')} ${plan.device_limit ? `${e(plan.device_limit)} 台设备` : '不限设备'}</li><li>${icon('check')} ${e(plan.content || '稳定线路与便捷订阅')}</li></ul>
+        <ul class="plan-features"><li>${icon('check')} ${e(plan.transfer_enable || 0)} GB 套餐流量</li><li>${icon('check')} ${plan.speed_limit ? `${e(plan.speed_limit)} Mbps` : t('unlimited_speed')} 网络</li><li>${icon('check')} ${plan.device_limit ? `${e(plan.device_limit)} 台设备` : '不限设备'}</li><li>${icon('check')} ${e(plan.content || t('plan_feature'))}</li></ul>
         <button class="btn ${featured ? 'btn-primary' : 'btn-secondary'}" data-action="purchase" data-plan="${e(plan.id)}" ${plan.sell === false || !prices.length ? 'disabled' : ''}>选择该方案 ${icon('arrow')}</button>
       </div>
     </article>`;
   }
 
   async function renderOrders(id) {
-    app.innerHTML = shell(`${pageHead('Billing', '我的订单', '查看购买记录和订单状态。')}<div class="card skeleton"></div>`, '我的订单');
+    app.innerHTML = shell(`${pageHead('Billing', t('nav_orders'), t('orders_title'))}<div class="card skeleton"></div>`, t('nav_orders'));
     try {
       const orders = await api('/user/order/fetch');
       if (id !== state.renderId) return;
@@ -510,15 +548,15 @@
         const status = orderStatus[order.status] || ['未知', 'warning'];
         return `<tr><td><strong>${e(order.plan?.name || '订阅套餐')}</strong><br><small>${e(order.trade_no || '')}</small></td><td>${e(periodMap[order.period] || order.period || '—')}</td><td>${money(order.total_amount)}</td><td>${date(order.created_at)}</td><td><span class="status ${status[1]}">${status[0]}</span></td><td>${Number(order.status) === 0 ? `<button class="btn btn-ghost btn-sm" data-action="cancel-order" data-trade="${e(order.trade_no)}">取消</button>` : '—'}</td></tr>`;
       }).join('');
-      const content = `${pageHead('Billing', '我的订单', '购买记录、支付状态和套餐信息都在这里。', '<a class="btn btn-primary" href="#/plans">购买套餐</a>')}
+      const content = `${pageHead('Billing', t('nav_orders'), '购买记录、支付状态和套餐信息都在这里。', '<a class="btn btn-primary" href="#/plans">购买套餐</a>')}
         <div class="grid grid-4" style="margin-bottom:24px">
-          ${statCard('orders', state.orders.length, '累计订单', 'bg-gradient-info')}
-          ${statCard('wallet', money(totalPaid), '已支付金额', 'bg-gradient-success')}
-          ${statCard('calendar', pendingCount, '待支付订单', 'bg-gradient-warning')}
-          ${statCard('chart', state.orders.filter(o => Number(o.status) === 2).length, '已完成订单', 'bg-gradient-primary')}
+          ${statCard('orders', state.orders.length, t('total_orders'), 'bg-gradient-info')}
+          ${statCard('wallet', money(totalPaid), t('paid_amount'), 'bg-gradient-success')}
+          ${statCard('calendar', pendingCount, t('pending_orders'), 'bg-gradient-warning')}
+          ${statCard('chart', state.orders.filter(o => Number(o.status) === 2).length, t('completed_orders'), 'bg-gradient-primary')}
         </div>
-        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>订单</th><th>周期</th><th>金额</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有订单', '选择一个套餐后，订单会显示在这里。')}</section>`;
-      app.innerHTML = shell(content, '我的订单');
+        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>订单</th><th>周期</th><th>金额</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有订单', t('orders_empty'))}</section>`;
+      app.innerHTML = shell(content, t('nav_orders'));
     } catch (error) { renderError(error); }
   }
 
@@ -529,7 +567,7 @@
         <h1>使用文档</h1>
         <p>安装、连接和常见问题说明</p>
         <div class="docs-search">
-          <input type="text" class="input" placeholder="请输入关键字" data-action="search-docs" value="${value}">
+          <input type="text" class="input" placeholder="${t('search_placeholder')}" data-action="search-docs" value="${value}">
         </div>
       </div>
     </div>`;
@@ -538,7 +576,7 @@
   function renderDocList(id) {
     const term = (state.docSearch || '').toLowerCase();
     const filtered = state.docs.filter(article => !term || (article.title || '').toLowerCase().includes(term) || (article.category || '').toLowerCase().includes(term));
-    const byCategory = filtered.reduce((all, article) => { (all[article.category || '使用指南'] ||= []).push(article); return all; }, {});
+    const byCategory = filtered.reduce((all, article) => { (all[article.category || t('docs_guide')] ||= []).push(article); return all; }, {});
     const sections = Object.entries(byCategory).map(([category, articles]) => `<section class="card doc-category">
       <div class="card-header"><h2>${e(category)}</h2><span>${articles.length} 篇文档</span></div>
       <div class="card-body doc-list">
@@ -549,8 +587,8 @@
         </div>`).join('')}
       </div>
     </section>`).join('');
-    const content = `${docsHeader()}<div class="docs-content">${sections || empty(term ? '没有匹配的文档' : '还没有文档', term ? '换个关键词试试' : '管理员暂未发布使用说明。')}</div>`;
-    app.innerHTML = shell(content, '使用文档');
+    const content = `${docsHeader()}<div class="docs-content">${sections || empty(term ? t('docs_no_match') : t('docs_none'), term ? t('docs_try') : t('docs_admin_none'))}</div>`;
+    app.innerHTML = shell(content, t('nav_docs'));
     const input = app.querySelector('[data-action="search-docs"]');
     if (input) {
       input.focus();
@@ -560,7 +598,7 @@
   }
 
   async function renderDocs(id) {
-    app.innerHTML = shell(`${docsHeader()}<div class="docs-content"><div class="skeleton" style="min-height:300px"></div></div>`, '使用文档');
+    app.innerHTML = shell(`${docsHeader()}<div class="docs-content"><div class="skeleton" style="min-height:300px"></div></div>`, t('nav_docs'));
     try {
       if (!state.docs.length) {
         const result = await api('/user/knowledge/fetch?language=zh-CN');
@@ -574,7 +612,7 @@
   }
 
   async function renderInvites(id) {
-    app.innerHTML = shell(`${pageHead('Referral', '我的邀请', '查看邀请码和返佣统计。')}<div class="grid grid-4"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, '我的邀请');
+    app.innerHTML = shell(`${pageHead('Referral', t('nav_invites'), t('invites_title'))}<div class="grid grid-4"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>`, t('nav_invites'));
     try {
       const invite = await api('/user/invite/fetch');
       if (id !== state.renderId) return;
@@ -582,15 +620,15 @@
       const stat = state.invite.stat || [];
       const codes = Array.isArray(state.invite.codes) ? state.invite.codes : [];
       const rows = codes.map(item => { const link = `${location.origin}/#/register?code=${encodeURIComponent(item.code)}`; return `<tr><td><strong>${e(item.code)}</strong></td><td>${e(item.pv || 0)}</td><td>${date(item.created_at)}</td><td><button class="btn btn-secondary btn-sm" data-action="copy-invite" data-link="${e(link)}">${icon('copy')} 复制链接</button></td></tr>`; }).join('');
-      const content = `${pageHead('Referral', '我的邀请', '分享邀请码，清楚查看邀请人数与返佣。', '<button class="btn btn-primary" data-action="generate-invite">生成邀请码</button>')}
+      const content = `${pageHead('Referral', t('nav_invites'), t('invites_sub'), '<button class="btn btn-primary" data-action="generate-invite">生成邀请码</button>')}
         <div class="grid grid-4">
-          ${statCard('invite', e(stat[0] || 0), '已注册用户', 'bg-gradient-primary')}
-          ${statCard('wallet', money(stat[1]), '有效佣金', 'bg-gradient-success')}
-          ${statCard('calendar', money(stat[2]), '待确认佣金', 'bg-gradient-info')}
-          ${statCard('chart', `${e(stat[3] || 0)}%`, '返佣比例', 'bg-gradient-warning')}
+          ${statCard('invite', e(stat[0] || 0), t('registered_users'), 'bg-gradient-primary')}
+          ${statCard('wallet', money(stat[1]), t('valid_commission'), 'bg-gradient-success')}
+          ${statCard('calendar', money(stat[2]), t('pending_commission'), 'bg-gradient-info')}
+          ${statCard('chart', `${e(stat[3] || 0)}%`, t('commission_rate'), 'bg-gradient-warning')}
         </div>
-        <section class="card" style="margin-top:24px">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>邀请码</th><th>访问量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有邀请码', '点击右上角生成第一个邀请码。')}</section>`;
-      app.innerHTML = shell(content, '我的邀请');
+        <section class="card" style="margin-top:24px">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>邀请码</th><th>访问量</th><th>创建时间</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有邀请码', t('invites_empty_sub'))}</section>`;
+      app.innerHTML = shell(content, t('nav_invites'));
     } catch (error) { renderError(error); }
   }
 
@@ -618,26 +656,26 @@
   }
 
   async function renderTickets(id) {
-    app.innerHTML = shell(`${pageHead('Support', '我的工单', '查看与客服的沟通记录。')}<div class="card skeleton"></div>`, '我的工单');
+    app.innerHTML = shell(`${pageHead('Support', t('nav_tickets'), '查看与客服的沟通记录。')}<div class="card skeleton"></div>`, t('nav_tickets'));
     try {
       const tickets = await api('/user/ticket/fetch');
       if (id !== state.renderId) return;
       state.tickets = Array.isArray(tickets) ? tickets : [];
       const openCount = state.tickets.filter(t => Number(t.status) === 0).length;
       const repliedCount = state.tickets.filter(t => Number(t.reply_status) === 1).length;
-      const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? '处理中' : '已关闭'}</span></td><td>${Number(item.reply_status) === 1 ? '<span class="status info">有新回复</span>' : '等待回复'}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
-      app.innerHTML = shell(`${pageHead('Support', '我的工单', '提交问题、查看回复，解决过程不会丢失。', '<button class="btn btn-primary" data-action="new-ticket">新建工单</button>')}
+      const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td>${Number(item.reply_status) === 1 ? '<span class="status info">有新回复</span>' : t('ticket_waiting')}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
+      app.innerHTML = shell(`${pageHead('Support', t('nav_tickets'), t('tickets_title'), '<button class="btn btn-primary" data-action="new-ticket">新建工单</button>')}
         <div class="grid grid-3" style="margin-bottom:24px">
           ${statCard('ticket', state.tickets.length, '全部工单', 'bg-gradient-primary')}
-          ${statCard('info', openCount, '处理中', 'bg-gradient-success')}
-          ${statCard('bell', repliedCount, '有新回复', 'bg-gradient-warning')}
+          ${statCard('info', openCount, t('ticket_open'), 'bg-gradient-success')}
+          ${statCard('bell', repliedCount, t('ticket_new_reply'), 'bg-gradient-warning')}
         </div>
-        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>主题</th><th>状态</th><th>回复</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有工单', '遇到问题时，可以创建一张新工单。')}</section>`, '我的工单');
+        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>主题</th><th>状态</th><th>回复</th><th>更新时间</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty('还没有工单', '遇到问题时，可以创建一张新工单。')}</section>`, t('nav_tickets'));
     } catch (error) { renderError(error); }
   }
 
   async function renderTraffic(id) {
-    app.innerHTML = shell(`${pageHead('Usage', '流量明细', '查看每日上传和下载用量。')}<div class="card skeleton"></div>`, '流量明细');
+    app.innerHTML = shell(`${pageHead('Usage', t('nav_traffic'), t('traffic_title'))}<div class="card skeleton"></div>`, t('nav_traffic'));
     try {
       const traffic = await api('/user/stat/getTrafficLog');
       if (id !== state.renderId) return;
@@ -646,35 +684,35 @@
       const totalUp = state.traffic.reduce((sum, item) => sum + Number(item.u || 0), 0);
       const totalDown = state.traffic.reduce((sum, item) => sum + Number(item.d || 0), 0);
       const bars = state.traffic.map(item => { const total = Number(item.u || 0) + Number(item.d || 0); return `<div class="traffic-row"><span>${date(item.record_at)}</span><div class="traffic-track"><i style="width:${Math.max(3, total / max * 100)}%"></i></div><b>${bytes(total)}</b><small>上 ${bytes(item.u)} · 下 ${bytes(item.d)} · ${e(item.server_rate || 1)}×</small></div>`; }).join('');
-      const content = `${pageHead('Usage', '流量明细', '统计记录由服务端生成，倍率已经单独标注。')}
+      const content = `${pageHead('Usage', t('nav_traffic'), '统计记录由服务端生成，倍率已经单独标注。')}
         <div class="grid grid-3">
           ${statCard('chart', bytes(totalUp + totalDown), '记录总用量', 'bg-gradient-primary')}
           ${statCard('arrow', bytes(totalDown), '下载流量', 'bg-gradient-success')}
           ${statCard('refresh', bytes(totalUp), '上传流量', 'bg-gradient-info')}
         </div>
         <section class="card card-pad traffic-history" style="margin-top:24px">${bars || empty('暂无流量记录', '开始使用节点后，明细会显示在这里。')}</section>`;
-      app.innerHTML = shell(content, '流量明细');
+      app.innerHTML = shell(content, t('nav_traffic'));
     } catch (error) { renderError(error); }
   }
 
   async function renderAccount(id) {
-    app.innerHTML = shell(`${pageHead('Account', '个人中心', '管理个人信息与安全选项。')}<div class="grid grid-2"><div class="skeleton"></div><div class="skeleton"></div></div>`, '个人中心');
+    app.innerHTML = shell(`${pageHead('Account', t('nav_account'), t('account_subtitle_loading'))}<div class="grid grid-2"><div class="skeleton"></div><div class="skeleton"></div></div>`, t('nav_account'));
     try {
       const user = state.user || await api('/user/info');
       if (id !== state.renderId) return;
       state.user = user;
-      const content = `${pageHead('Account', '个人中心', '你的账户资料与常用操作。')}
-        <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>加入于 ${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>账户余额</span><b>${money(user.balance)}</b></div><div class="info-item"><span>套餐编号</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>到期时间</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>账户状态</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? '已停用' : '正常'}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>偏好设置</h2><p>这些设置保存在当前浏览器</p></div></div><div class="info-list"><div class="info-item"><span>界面主题</span><button class="btn btn-secondary btn-sm" data-action="theme">切换深浅色</button></div><div class="info-item"><span>客服支持</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">打开客服</a>` : '<b>未配置</b>'}</div><div class="info-item"><span>前端版本</span><b>Argon-Xboard 1.1.7</b></div><div class="info-item"><span>登录状态</span><button class="btn btn-danger btn-sm" data-action="logout">退出登录</button></div></div></section></div>
-        <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>安全设置</h2><p>定期更换密码可以保护账户安全</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">当前密码</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="请输入当前密码"></div><div class="form-row"><div class="field"><label for="new_password">新密码</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="至少 8 位字符"></div><div class="field"><label for="new_password_confirmation">确认新密码</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="再次输入新密码"></div></div><button class="btn btn-primary" type="submit">修改密码</button></form></section>`;
-      app.innerHTML = shell(content, '个人中心');
+      const content = `${pageHead('Account', t('nav_account'), t('account_subtitle'))}
+        <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>${t('joined_at')}${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>${t('account_balance')}</span><b>${money(user.balance)}</b></div><div class="info-item"><span>${t('plan_id')}</span><b>${e(user.plan_id || '暂无')}</b></div><div class="info-item"><span>${t('expire_time')}</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>${t('account_status')}</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? t('banned') : t('status_normal')}</span></b></div></div></section>
+        <section class="card card-pad"><div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div><div class="info-list"><div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div><div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div><div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard 1.1.8</b></div><div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div></div></section></div>
+        <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>${t('security')}</h2><p>${t('security_sub')}</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">${t('current_password')}</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="${t('current_password_ph')}"></div><div class="form-row"><div class="field"><label for="new_password">${t('new_password_label')}</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="${t('password_min')}"></div><div class="field"><label for="new_password_confirmation">${t('confirm_new_password')}</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="${t('confirm_password_ph')}"></div></div><button class="btn btn-primary" type="submit">${t('change_password')}</button></form></section>`;
+      app.innerHTML = shell(content, t('nav_account'));
     } catch (error) { renderError(error); }
   }
 
   function empty(title, message) { return `<div class="empty">${icon('empty')}<h3>${e(title)}</h3><p>${e(message)}</p></div>`; }
   function renderError(error) {
-    const content = `${pageHead('Connection', '页面暂时无法载入', '服务器返回了一个错误。')}<section class="card empty">${icon('info')}<h3>${e(error.message || '加载失败')}</h3><p>请检查网络或稍后再试。</p><button class="btn btn-primary" data-action="reload" style="margin-top:16px">${icon('refresh')} 重新加载</button></section>`;
-    app.innerHTML = state.auth ? shell(content, '连接异常') : app.innerHTML;
+    const content = `${pageHead('Connection', t('error_title'), t('error_subtitle'))}<section class="card empty">${icon('info')}<h3>${e(error.message || t('load_failed'))}</h3><p>请检查网络或稍后再试。</p><button class="btn btn-primary" data-action="reload" style="margin-top:16px">${icon('refresh')} 重新加载</button></section>`;
+    app.innerHTML = state.auth ? shell(content, t('connection_error')) : app.innerHTML;
   }
 
   async function openDoc(articleId) {
@@ -683,7 +721,7 @@
     if (!dialog.open) dialog.showModal();
     try {
       const article = state.docs.find(item => String(item.id) === String(articleId)) || await api(`/user/knowledge/fetch?id=${encodeURIComponent(articleId)}&language=zh-CN`);
-      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(article.title)}</h3><small>${e(article.category || '使用文档')}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><article class="dialog-body rich-text">${safeHtml(article.body || '<p>暂无内容</p>')}</article>`;
+      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(article.title)}</h3><small>${e(article.category || t('nav_docs'))}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><article class="dialog-body rich-text">${safeHtml(article.body || '<p>暂无内容</p>')}</article>`;
     } catch (error) { dialog.close(); toast(error.message, 'error'); }
   }
 
@@ -774,9 +812,9 @@
       Object.assign(data, await captchaPayload(mode));
       const result = await api(`/passport/auth/${mode}`, { method: 'POST', body: data });
       saveAuth(result.auth_data);
-      toast(mode === 'register' ? '账户创建成功' : '欢迎回来');
+      toast(mode === 'register' ? '账户创建成功' : t('auth_welcome'));
       go('dashboard');
-    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = mode === 'register' ? '注册并进入' : '登录控制中心'; }
+    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = mode === 'register' ? t('register_submit') : t('login_submit'); }
   }
 
   async function handleForgot(form) {
@@ -787,12 +825,12 @@
       await api('/passport/auth/forget', { method: 'POST', body: { email: data.email, email_code: data.email_code, password: data.password } });
       toast('密码已重置，请使用新密码登录', 'success');
       go('login');
-    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = '重置密码'; }
+    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = t('reset_password'); }
   }
 
   async function sendEmailCode(button) {
     const email = document.getElementById('email')?.value;
-    if (!email) return toast('请先填写邮箱地址', 'error');
+    if (!email) return toast(t('please_enter_email'), 'error');
     button.disabled = true;
     try {
       const captcha = await captchaPayload();
@@ -800,7 +838,7 @@
       let count = 60; button.textContent = `${count}s`;
       const timer = setInterval(() => { count -= 1; button.textContent = count > 0 ? `${count}s` : '重新发送'; if (count <= 0) { clearInterval(timer); button.disabled = false; } }, 1000);
       toast('验证码已发送，请检查邮箱');
-    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = '发送验证码'; }
+    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = t('send_code'); }
   }
 
   async function render() {
@@ -825,8 +863,19 @@
   }
 
   document.addEventListener('click', async event => {
-    const target = event.target.closest('[data-action], [data-nav]');
-    if (!target) return;
+    const target = event.target.closest('[data-action], [data-nav], [data-dropdown-toggle]');
+    if (!target) {
+      if (!event.target.closest('[data-dropdown]')) document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.remove('open'));
+      return;
+    }
+    if (target.dataset.dropdownToggle) {
+      const name = target.dataset.dropdownToggle;
+      const menu = document.querySelector(`[data-dropdown-menu="${name}"]`);
+      const isOpen = menu?.classList.contains('open');
+      document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.remove('open'));
+      if (menu && !isOpen) menu.classList.add('open');
+      return;
+    }
     if (target.dataset.nav) { go(target.dataset.nav); return; }
     const action = target.dataset.action;
     if (action === 'theme') {
@@ -834,12 +883,12 @@
     } else if (action === 'logout') {
       clearAuth(); toast('已安全退出'); go('login');
     } else if (action === 'copy-sub') {
-      try { await navigator.clipboard.writeText(state.subscribe?.subscribe_url || ''); toast('订阅链接已复制'); } catch { toast('复制失败，请手动复制', 'error'); }
+      try { await navigator.clipboard.writeText(state.subscribe?.subscribe_url || ''); toast(t('copy_subscribe_url')); } catch { toast(t('copy_failed'), 'error'); }
     } else if (action === 'reset-subscribe') {
-      if (!confirm('确定要重置订阅链接吗？旧链接将立即失效。')) return;
-      try { await api('/user/resetSecurity', { method: 'POST' }); toast('订阅链接已重置'); render(); } catch (error) { toast(error.message, 'error'); }
+      if (!confirm(t('reset_confirm'))) return;
+      try { await api('/user/resetSecurity', { method: 'POST' }); toast(t('reset_done')); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'copy-invite') {
-      try { await navigator.clipboard.writeText(target.dataset.link || ''); toast('邀请链接已复制'); } catch { toast('复制失败，请手动复制', 'error'); }
+      try { await navigator.clipboard.writeText(target.dataset.link || ''); toast(t('copy_invite_url')); } catch { toast(t('copy_failed'), 'error'); }
     } else if (action === 'open-doc') openDoc(target.dataset.id);
     else if (action === 'new-ticket') openTicketCreate();
     else if (action === 'open-ticket') openTicket(target.dataset.id);
@@ -855,6 +904,8 @@
       try { await api('/user/order/cancel', { method: 'POST', body: { trade_no: target.dataset.trade } }); toast('订单已取消'); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'go-tickets') {
       go('tickets');
+    } else if (action === 'set-lang') {
+      setLang(target.dataset.lang);
     }
   });
 
@@ -872,14 +923,14 @@
   });
 
   async function changePassword(form) {
-    const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = '正在修改…';
+    const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = t('changing');
     try {
       const data = Object.fromEntries(new FormData(form).entries());
       if (data.new_password !== data.new_password_confirmation) throw new Error('两次输入的新密码不一致');
       await api('/user/changePassword', { method: 'POST', body: { old_password: data.old_password, new_password: data.new_password } });
       form.reset(); toast('密码已修改，请使用新密码重新登录');
     } catch (error) { toast(error.message, 'error'); }
-    finally { button.disabled = false; button.textContent = '修改密码'; }
+    finally { button.disabled = false; button.textContent = t('change_password'); }
   }
 
   document.addEventListener('input', event => {
