@@ -170,6 +170,20 @@ img { max-width: 100%; }
 
 .subscribe-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .subscribe-actions .hint-text { color: var(--muted); font-size: 12px; }
+.subscribe-reset-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+.subscribe-reset-copy { min-width: 0; display: grid; gap: 4px; }
+.subscribe-reset-copy b { color: var(--ink); font-size: 13px; }
+.subscribe-reset-copy p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 
 .app-shell { min-height: 100vh; display: flex; }
 .sidebar {
@@ -280,6 +294,10 @@ img { max-width: 100%; }
 .announcement { display: flex; align-items: flex-start; gap: 12px; padding: 16px 20px; margin-bottom: 24px; border-radius: var(--radius); background: linear-gradient(135deg, rgba(var(--primary-rgb), .08), rgba(17, 205, 239, .05)); border: 1px solid rgba(var(--primary-rgb), .12); }
 .announcement .icon { color: var(--primary); flex: 0 0 auto; }
 .announcement p { margin: 0; color: var(--body); font-size: 13px; line-height: 1.6; }
+.announcement-content a,
+.announcement-link { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; word-break: break-all; }
+.announcement-content a:hover,
+.announcement-link:hover { color: var(--primary-strong); }
 
 .plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
 .plan-card { position: relative; display: flex; flex-direction: column; min-height: 400px; padding: 0; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
@@ -542,6 +560,8 @@ img { max-width: 100%; }
   .traffic-row { grid-template-columns: 80px 1fr 60px; gap: 8px; }
   .subscribe-box { flex-direction: column; align-items: stretch; }
   .subscribe-box .btn { width: 100%; }
+  .subscribe-reset-card { flex-direction: column; align-items: stretch; }
+  .subscribe-reset-card .btn { width: 100%; }
   .table th, .table td { padding-left: 12px; padding-right: 12px; }
   .auth-main { padding: 40px 0; }
 }

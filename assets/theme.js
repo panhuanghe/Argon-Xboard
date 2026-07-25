@@ -362,6 +362,70 @@
     return template.innerHTML;
   }
 
+  function safeHttpUrl(value) {
+    try {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      const url = new URL(raw, location.origin);
+      return /^https?:$/i.test(url.protocol) ? url.href : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderLink(href, label) {
+    const safe = safeHttpUrl(href);
+    if (!safe) return e(label || href || '');
+    return `<a class="announcement-link" href="${e(safe)}" target="_blank" rel="noopener">${e(label || safe)}</a>`;
+  }
+
+  function linkifyPlainText(text) {
+    const source = String(text || '');
+    const urlRegex = /https?:\/\/[^\s]+/gi;
+    let html = '';
+    let last = 0;
+    let match;
+    while ((match = urlRegex.exec(source))) {
+      const raw = match[0];
+      const start = match.index;
+      html += e(source.slice(last, start));
+      let trimmed = raw;
+      let tail = '';
+      while (/[),.;!?\]]$/.test(trimmed)) {
+        tail = trimmed.slice(-1) + tail;
+        trimmed = trimmed.slice(0, -1);
+      }
+      const linked = renderLink(trimmed, trimmed);
+      html += linked + e(tail);
+      last = start + raw.length;
+    }
+    html += e(source.slice(last));
+    return html;
+  }
+
+  function renderAnnouncementContent(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/<[^>]+>/.test(raw)) return safeHtml(raw);
+
+    const normalized = raw.replace(/\r\n/g, '\n');
+    const markdownLink = /\[([^\]]+)\]\(([^)]*)\)/g;
+    let html = '';
+    let last = 0;
+    let match;
+    while ((match = markdownLink.exec(normalized))) {
+      html += linkifyPlainText(normalized.slice(last, match.index));
+      const label = String(match[1] || '').trim();
+      const hrefRaw = String(match[2] || '').trim();
+      const fallback = /^https?:\/\//i.test(label) ? label : '';
+      const href = safeHttpUrl(hrefRaw) || safeHttpUrl(fallback);
+      html += href ? renderLink(href, label || href) : e(match[0]);
+      last = markdownLink.lastIndex;
+    }
+    html += linkifyPlainText(normalized.slice(last));
+    return html.replace(/\n/g, '<br>');
+  }
+
   function icon(name) {
     const paths = {
       dashboard: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
@@ -876,7 +940,7 @@
           <a class="btn btn-light" href="#/plans">${t('view_plan')}</a>
         </div>
       </div>
-      ${announcement ? `<div class="announcement">${icon('bell')}<p>${e(announcement)}</p></div>` : ''}
+      ${announcement ? `<div class="announcement">${icon('bell')}<p class="announcement-content">${renderAnnouncementContent(announcement)}</p></div>` : ''}
       <div class="grid grid-4">
         ${statCard('wifi', planName, t('current_subscribe'), 'bg-gradient-primary')}
         ${statCard('chart', bytes(remaining), t('remaining_traffic'), 'bg-gradient-success')}
@@ -909,9 +973,12 @@
               <div class="info-item"><span>${t('speed_limit')}</span><b>${subscribe.speed_limit ? `${e(subscribe.speed_limit)} Mbps` : t('unlimited_speed')}</b></div>
               <div class="info-item"><span>${t('subscribe_status')}</span><b><span class="status success">${t('status_normal')}</span></b></div>
             </div>
-            <div class="subscribe-actions">
-              <button class="btn btn-warning btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} ${t('reset_subscribe')}</button>
-              <span class="hint-text">${t('reset_hint')}</span>
+            <div class="subscribe-reset-card">
+              <div class="subscribe-reset-copy">
+                <b>${t('reset_subscribe')}</b>
+                <p>${t('reset_hint')}</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" data-action="reset-subscribe" ${subscribe.subscribe_url ? '' : 'disabled'}>${icon('refresh')} ${t('reset_subscribe')}</button>
             </div>
           </div>
         </section>
@@ -1144,7 +1211,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.10')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.11')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
