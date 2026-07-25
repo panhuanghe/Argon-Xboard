@@ -246,7 +246,7 @@
     notificationPrefs: readNotificationPrefs(),
     guest: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
     docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
-    loading: false, captchaToken: '', renderId: 0
+    loading: false, captchaToken: '', quickSubscribeOS: 'ios', renderId: 0
   };
 
   applyBrandColor(config.primaryColor);
@@ -424,6 +424,145 @@
     }
     html += linkifyPlainText(normalized.slice(last));
     return html.replace(/\n/g, '<br>');
+  }
+
+  function normalizeTemplateFlag(flag) {
+    return String(flag || '').trim().toLowerCase().replace(/_/g, '-');
+  }
+
+  function templateLabel(flag) {
+    const map = {
+      'sing-box': 'Sing-box',
+      'singbox': 'Sing-box',
+      'clash': 'Clash',
+      'clash-meta': 'Clash Meta',
+      'stash': 'Stash',
+      'surge': 'Surge',
+      'surfboard': 'Surfboard'
+    };
+    return map[normalizeTemplateFlag(flag)] || String(flag || '');
+  }
+
+  function buildTemplateSubscribeUrl(subscribeUrl, flag) {
+    const safe = safeHttpUrl(subscribeUrl);
+    if (!safe) return '';
+    try {
+      const parsed = new URL(safe);
+      const normalized = normalizeTemplateFlag(flag);
+      if (normalized) parsed.searchParams.set('flag', normalized);
+      return parsed.toString();
+    } catch (_) {
+      return safe;
+    }
+  }
+
+  function encodeBase64Utf8(value) {
+    try {
+      return btoa(unescape(encodeURIComponent(String(value || ''))));
+    } catch (_) {
+      return btoa(String(value || ''));
+    }
+  }
+
+  function buildQuickImportUrl(client, templateUrl) {
+    const encoded = encodeURIComponent(templateUrl);
+    const appName = encodeURIComponent(String(config.brandName || config.title || 'Argon-Xboard'));
+    switch (String(client || '').toLowerCase()) {
+      case 'shadowrocket':
+        return `shadowrocket://add/sub://${encodeBase64Utf8(templateUrl)}?remark=${appName}`;
+      case 'surge':
+        return `surge://install-config?url=${encoded}&name=${appName}`;
+      case 'stash':
+        return `stash://install-config?url=${encoded}&name=${appName}`;
+      case 'clash':
+      case 'clash-meta':
+        return `clash://install-config?url=${encoded}&name=${appName}`;
+      case 'sing-box':
+      case 'singbox':
+        return `sing-box://import-remote-profile?url=${encoded}&name=${appName}`;
+      case 'surfboard':
+        return `surfboard://install-config?url=${encoded}&name=${appName}`;
+      default:
+        return '';
+    }
+  }
+
+  function quickClientItemsByOS(os) {
+    const current = String(os || 'ios').toLowerCase();
+    const groups = {
+      ios: [
+        { client: 'shadowrocket', label: '导入到 Shadowrocket', flag: 'surge' },
+        { client: 'surge', label: '导入到 Surge', flag: 'surge' },
+        { client: 'stash', label: '导入到 Stash', flag: 'stash' }
+      ],
+      android: [
+        { client: 'clash-meta', label: '导入到 Clash Meta', flag: 'clash-meta' },
+        { client: 'surfboard', label: '导入到 Surfboard', flag: 'surfboard' },
+        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+      ],
+      macos: [
+        { client: 'clash-meta', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'surge', label: '导入到 Surge', flag: 'surge' },
+        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+      ],
+      windows: [
+        { client: 'clash-meta', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'clash', label: '导入到 Clash for Windows', flag: 'clash' },
+        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+      ]
+    };
+    return groups[current] || groups.ios;
+  }
+
+  function renderQuickSubscribeModule(subscribe) {
+    const subscribeUrl = safeHttpUrl(subscribe?.subscribe_url || '');
+    if (!subscribeUrl) return '';
+    const osList = ['ios', 'android', 'macos', 'windows'];
+    const currentOS = osList.includes(String(state.quickSubscribeOS || '').toLowerCase()) ? String(state.quickSubscribeOS).toLowerCase() : 'ios';
+    const clients = quickClientItemsByOS(currentOS);
+    return `<section class="quick-subscribe-card">
+      <div class="quick-subscribe-head">
+        <h3>一键订阅</h3>
+        <small>与后台订阅模板联动</small>
+      </div>
+      <div class="quick-subscribe-actions">
+        <button class="quick-action-btn" type="button" data-action="copy-sub">${icon('copy')}<span>复制订阅地址</span></button>
+        <button class="quick-action-btn" type="button" data-action="show-sub-qr">${icon('dashboard')}<span>扫描二维码订阅</span></button>
+      </div>
+      <div class="quick-subscribe-tabs">${osList.map(os => `<button type="button" class="quick-tab ${currentOS === os ? 'active' : ''}" data-action="set-quick-os" data-os="${os}">${os.toUpperCase()}</button>`).join('')}</div>
+      <div class="quick-client-list">${clients.map(item => `<button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${e(templateLabel(item.flag))} 模板</small></button>`).join('')}</div>
+    </section>`;
+  }
+
+  function openSubscribeQr(subscribeUrl) {
+    const safe = safeHttpUrl(subscribeUrl);
+    if (!safe) {
+      toast(t('no_subscribe_url'), 'error');
+      return;
+    }
+    const dialog = document.getElementById('global-dialog');
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(safe)}`;
+    dialog.innerHTML = `<div class="dialog-head"><div><h3>扫码订阅</h3><small>使用客户端扫码导入订阅</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body quick-qr-body"><img class="quick-qr-image" src="${e(qrSrc)}" alt="QR"><p class="quick-qr-link">${renderLink(safe, safe)}</p></div>`;
+    dialog.showModal();
+  }
+
+  async function openQuickClientImport(client, flag) {
+    const subscribeUrl = safeHttpUrl(state.subscribe?.subscribe_url || '');
+    if (!subscribeUrl) {
+      toast(t('no_subscribe_url'), 'error');
+      return;
+    }
+    const templateUrl = buildTemplateSubscribeUrl(subscribeUrl, flag);
+    const importUrl = buildQuickImportUrl(client, templateUrl);
+    if (importUrl) {
+      window.location.href = importUrl;
+    } else {
+      window.open(templateUrl, '_blank', 'noopener');
+    }
+    try {
+      await navigator.clipboard.writeText(templateUrl);
+      toast(t('copy_subscribe_url'));
+    } catch (_) {}
   }
 
   function icon(name) {
@@ -959,6 +1098,7 @@
             </div>
             <div class="progress subscription-progress"><span style="width:${percent}%"></span></div>
             <p class="subscription-usage">${t('used')} ${bytes(used)} / ${t('total')} ${bytes(total)}</p>
+            ${renderQuickSubscribeModule(subscribe)}
           </div>
         </section>
         <section class="card subscribe-card">
@@ -1211,7 +1351,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.12')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.13')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1425,7 +1565,22 @@
     } else if (action === 'logout') {
       clearAuth(); toast(tx('logout_done')); go('login');
     } else if (action === 'copy-sub') {
-      try { await navigator.clipboard.writeText(state.subscribe?.subscribe_url || ''); toast(t('copy_subscribe_url')); } catch { toast(t('copy_failed'), 'error'); }
+      const subscribeUrl = safeHttpUrl(state.subscribe?.subscribe_url || '');
+      if (!subscribeUrl) {
+        toast(t('no_subscribe_url'), 'error');
+      } else {
+        try { await navigator.clipboard.writeText(subscribeUrl); toast(t('copy_subscribe_url')); } catch { toast(t('copy_failed'), 'error'); }
+      }
+    } else if (action === 'show-sub-qr') {
+      openSubscribeQr(state.subscribe?.subscribe_url || '');
+    } else if (action === 'set-quick-os') {
+      const nextOS = String(target.dataset.os || '').toLowerCase();
+      if (nextOS && nextOS !== state.quickSubscribeOS) {
+        state.quickSubscribeOS = nextOS;
+        render();
+      }
+    } else if (action === 'open-quick-client') {
+      await openQuickClientImport(target.dataset.client, target.dataset.flag);
     } else if (action === 'reset-subscribe') {
       if (!confirm(t('reset_confirm'))) return;
       try { await api('/user/resetSecurity', { method: 'POST' }); toast(t('reset_done')); render(); } catch (error) { toast(error.message, 'error'); }
