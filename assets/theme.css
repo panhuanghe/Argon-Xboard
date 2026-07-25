@@ -329,6 +329,17 @@ img { max-width: 100%; }
 .info-item:last-child { border-bottom: 0; }
 .info-item span { color: var(--muted); font-size: 13px; }
 .info-item b { color: var(--ink); font-size: 13px; }
+.notify-list { margin-top: 6px; border-top: 1px solid var(--line); }
+.notify-item { min-height: 94px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); }
+.notify-item:last-child { border-bottom: 0; }
+.notify-copy { display: grid; gap: 8px; min-width: 0; }
+.notify-copy b { color: var(--ink); font-size: 34px; font-size: clamp(22px, 2vw, 38px); letter-spacing: -.02em; line-height: 1.1; font-weight: 700; }
+.notify-copy p { margin: 0; color: var(--body); font-size: 24px; font-size: clamp(14px, 1.2vw, 26px); line-height: 1.45; }
+.switch-toggle { width: 68px; height: 34px; padding: 3px; border: 0; border-radius: 999px; background: #c8ced8; cursor: pointer; flex: 0 0 auto; transition: background .18s ease; position: relative; }
+.switch-toggle span { display: block; width: 28px; height: 28px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(31, 45, 61, .2); transform: translateX(0); transition: transform .18s ease; }
+.switch-toggle.on { background: var(--primary); }
+.switch-toggle.on span { transform: translateX(34px); }
+.switch-toggle:focus-visible { outline: 3px solid rgba(var(--primary-rgb), .22); outline-offset: 2px; }
 
 .docs-header { margin: -24px -24px 0; padding: 48px 24px 80px; color: #fff; background: linear-gradient(135deg, var(--primary), #825ee4); border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
 .docs-header-body { max-width: 1440px; margin: 0 auto; text-align: center; }
@@ -471,6 +482,12 @@ img { max-width: 100%; }
   .usage-metrics { grid-template-columns: 1fr; }
   .period-list, .payment-list { grid-template-columns: 1fr; }
   .subscribe-url { white-space: normal; word-break: break-all; }
+  .notify-item { min-height: 84px; }
+  .notify-copy b { font-size: 28px; }
+  .notify-copy p { font-size: 16px; }
+  .switch-toggle { width: 62px; height: 32px; }
+  .switch-toggle span { width: 26px; height: 26px; }
+  .switch-toggle.on span { transform: translateX(30px); }
   body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
 }
 

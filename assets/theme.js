@@ -92,7 +92,14 @@
       notice_center_title: '站内提醒',
       notice_center_sub: '这里会展示最新通知与公告。',
       notice_popup_title: '消息提醒',
-      notice_empty: '暂无新的提醒'
+      notice_empty: '暂无新的提醒',
+      notification_settings_title: '通知',
+      notification_settings_sub: '你可以在这里管理邮件提醒偏好。',
+      expiry_email_reminder: '到期邮件提醒',
+      expiry_email_reminder_desc: '订阅即将到期时将收到邮件提醒',
+      traffic_email_reminder: '流量邮件提醒',
+      traffic_email_reminder_desc: '当订阅流量即将耗尽时将收到邮件提醒',
+      notification_saved: '提醒设置已更新'
     },
     en: {
       docs_subtitle: 'Install, connect, and common troubleshooting notes',
@@ -166,7 +173,14 @@
       notice_center_title: 'Notifications',
       notice_center_sub: 'Latest announcements and messages are shown here.',
       notice_popup_title: 'Message',
-      notice_empty: 'No new notifications'
+      notice_empty: 'No new notifications',
+      notification_settings_title: 'Notifications',
+      notification_settings_sub: 'Manage your email reminder preferences here.',
+      expiry_email_reminder: 'Expiry email reminder',
+      expiry_email_reminder_desc: 'Get an email reminder before your subscription expires.',
+      traffic_email_reminder: 'Traffic email reminder',
+      traffic_email_reminder_desc: 'Get an email reminder before your traffic is exhausted.',
+      notification_saved: 'Notification preferences updated'
     }
   };
   function tx(key, fallback = '') {
@@ -222,9 +236,12 @@
   const storageKey = 'nebulax_auth_data';
   const themeKey = 'nebulax_color_mode';
   const noticeSeenKey = 'argon_notice_seen';
+  const notifyPrefKey = 'argon_notification_prefs';
+  const defaultNotifyPrefs = { expiryEmail: false, trafficEmail: false };
   const state = {
     auth: localStorage.getItem(storageKey) || '',
     lang: initialLang,
+    notificationPrefs: readNotificationPrefs(),
     guest: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
     docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
     loading: false, captchaToken: '', renderId: 0
@@ -251,6 +268,36 @@
   function setColorMode(mode) {
     document.documentElement.dataset.theme = mode === 'dark' ? 'dark' : 'light';
     localStorage.setItem(themeKey, mode);
+  }
+
+  function readNotificationPrefs() {
+    try {
+      const raw = localStorage.getItem(notifyPrefKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return {
+        expiryEmail: Boolean(parsed?.expiryEmail),
+        trafficEmail: Boolean(parsed?.trafficEmail)
+      };
+    } catch (_) {
+      return Object.assign({}, defaultNotifyPrefs);
+    }
+  }
+
+  function saveNotificationPrefs(prefs) {
+    const next = {
+      expiryEmail: Boolean(prefs?.expiryEmail),
+      trafficEmail: Boolean(prefs?.trafficEmail)
+    };
+    state.notificationPrefs = next;
+    localStorage.setItem(notifyPrefKey, JSON.stringify(next));
+    return next;
+  }
+
+  function toggleNotificationPref(key) {
+    if (!Object.prototype.hasOwnProperty.call(defaultNotifyPrefs, key)) return state.notificationPrefs;
+    const next = Object.assign({}, state.notificationPrefs || readNotificationPrefs());
+    next[key] = !Boolean(next[key]);
+    return saveNotificationPrefs(next);
   }
 
   function ensureGlobals() {
@@ -1012,9 +1059,11 @@
       const user = state.user || await api('/user/info');
       if (id !== state.renderId) return;
       state.user = user;
+      const notifyPrefs = state.notificationPrefs || readNotificationPrefs();
       const content = `${pageHead(t('nav_account'), t('nav_account'), t('account_subtitle'))}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>${t('joined_at')}${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>${t('account_balance')}</span><b>${money(user.balance)}</b></div><div class="info-item"><span>${t('plan_id')}</span><b>${e(user.plan_id || tx('no_content'))}</b></div><div class="info-item"><span>${t('expire_time')}</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>${t('account_status')}</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? t('banned') : t('status_normal')}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div><div class="info-list"><div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div><div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div><div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.1.9')}</b></div><div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div></div></section></div>
+        <section class="card card-pad"><div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div><div class="info-list"><div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div><div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div><div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.3')}</b></div><div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div></div></section></div>
+        <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>${tx('notification_settings_title')}</h2><p>${tx('notification_settings_sub')}</p></div></div><div class="notify-list"><div class="notify-item"><div class="notify-copy"><b>${tx('expiry_email_reminder')}</b><p>${tx('expiry_email_reminder_desc')}</p></div><button class="switch-toggle ${notifyPrefs.expiryEmail ? 'on' : ''}" type="button" role="switch" aria-checked="${notifyPrefs.expiryEmail ? 'true' : 'false'}" data-action="toggle-notify" data-notify-key="expiryEmail"><span></span></button></div><div class="notify-item"><div class="notify-copy"><b>${tx('traffic_email_reminder')}</b><p>${tx('traffic_email_reminder_desc')}</p></div><button class="switch-toggle ${notifyPrefs.trafficEmail ? 'on' : ''}" type="button" role="switch" aria-checked="${notifyPrefs.trafficEmail ? 'true' : 'false'}" data-action="toggle-notify" data-notify-key="trafficEmail"><span></span></button></div></div></section>
         <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>${t('security')}</h2><p>${t('security_sub')}</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">${t('current_password')}</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="${t('current_password_ph')}"></div><div class="form-row"><div class="field"><label for="new_password">${t('new_password_label')}</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="${t('password_min')}"></div><div class="field"><label for="new_password_confirmation">${t('confirm_new_password')}</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="${t('confirm_password_ph')}"></div></div><button class="btn btn-primary" type="submit">${t('change_password')}</button></form></section>`;
       app.innerHTML = shell(content, t('nav_account'));
     } catch (error) { renderError(error); }
@@ -1215,6 +1264,13 @@
       try { await api('/user/order/cancel', { method: 'POST', body: { trade_no: target.dataset.trade } }); toast(tx('order_cancelled')); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'go-notices') {
       openNoticeCenter();
+    } else if (action === 'toggle-notify') {
+      const key = target.dataset.notifyKey;
+      const prefs = toggleNotificationPref(key);
+      const on = Boolean(prefs?.[key]);
+      target.classList.toggle('on', on);
+      target.setAttribute('aria-checked', on ? 'true' : 'false');
+      toast(tx('notification_saved'));
     } else if (action === 'set-lang') {
       setLang(target.dataset.lang);
     }
