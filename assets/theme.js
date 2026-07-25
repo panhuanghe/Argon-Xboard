@@ -853,6 +853,24 @@
   function messageIsFromUser(message) {
     if (!message || typeof message !== 'object') return false;
 
+    const currentUserId = Number(state?.user?.id ?? state?.user?.user_id ?? state?.user?.uid ?? 0);
+
+    const adminId = Number(message?.admin_id ?? message?.adminId ?? message?.staff_id ?? message?.staffId ?? 0);
+    if (Number.isFinite(adminId) && adminId > 0) return false;
+
+    const userId = Number(message?.user_id ?? message?.userId ?? message?.uid ?? 0);
+    if (Number.isFinite(userId) && userId > 0 && Number.isFinite(currentUserId) && currentUserId > 0 && userId !== currentUserId) return false;
+
+    const adminBoolCandidates = [message?.is_admin, message?.isAdmin, message?.from_admin, message?.fromAdmin];
+    for (const raw of adminBoolCandidates) {
+      const parsed = parseIsMeFlag(raw);
+      if (parsed !== null) return !parsed;
+    }
+
+    const senderRaw = String(message?.sender ?? message?.from ?? message?.sender_type_name ?? message?.senderTypeName ?? '').trim().toLowerCase();
+    if (['admin', 'support', 'staff', 'system', 'service', '客服', '管理员'].includes(senderRaw)) return false;
+    if (['user', 'client', 'member', 'customer', 'self', 'me', '用户'].includes(senderRaw)) return true;
+
     const directCandidates = [
       message?.is_me, message?.isMe,
       message?.from_me, message?.fromMe,
@@ -865,14 +883,14 @@
       if (parsed !== null) return parsed;
     }
 
-    const roleRaw = String(message?.role ?? message?.sender_role ?? message?.senderRole ?? message?.sender_type_name ?? '').trim().toLowerCase();
+    const roleRaw = String(message?.role ?? message?.sender_role ?? message?.senderRole ?? '').trim().toLowerCase();
     if (['user', 'client', 'member', 'customer', 'self', 'me'].includes(roleRaw)) return true;
     if (['admin', 'support', 'staff', 'system', 'service'].includes(roleRaw)) return false;
 
     const typeNum = Number(message?.type ?? message?.sender_type ?? message?.senderType);
     if (Number.isFinite(typeNum)) {
-      if (typeNum === 1) return true;
-      if (typeNum === 0 || typeNum === 2) return false;
+      if (typeNum === 0) return false;
+      if (Number.isFinite(currentUserId) && currentUserId > 0 && typeNum === currentUserId) return true;
     }
 
     return false;
@@ -1694,7 +1712,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.21')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.22')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
