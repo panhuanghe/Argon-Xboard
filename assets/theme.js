@@ -547,7 +547,7 @@
       clash: 'https://github.com/Fndroid/clash_for_windows_pkg/releases',
       'sing-box': 'https://sing-box.sagernet.org/clients/',
       singbox: 'https://sing-box.sagernet.org/clients/',
-      surfboard: 'https://play.google.com/store/apps/details?id=com.getsurfboard'
+      surfboard: 'https://apkpure.com/surfboard/com.getsurfboard'
     };
     return links[name] || '';
   }
@@ -1354,7 +1354,7 @@
       const openCount = state.tickets.filter(t => Number(t.status) === 0).length;
       const repliedCount = state.tickets.filter(t => Number(t.reply_status) === 1).length;
       const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td>${Number(item.reply_status) === 1 ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting')}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
-      app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-primary" data-action="new-ticket">${t('new_ticket')}</button>`)}
+      app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-ticket-cta" data-action="new-ticket">${icon('ticket')}<span>${t('new_ticket')}</span></button>`)}
         <div class="grid grid-3" style="margin-bottom:24px">
           ${statCard('ticket', state.tickets.length, tx('tickets_all'), 'bg-gradient-primary')}
           ${statCard('info', openCount, t('ticket_open'), 'bg-gradient-success')}

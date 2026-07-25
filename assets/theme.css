@@ -167,6 +167,22 @@ img { max-width: 100%; }
 .btn-sm { min-height: 34px; border-radius: 6px; padding: 0 14px; font-size: 12px; }
 .btn-light { color: var(--primary); background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
 .btn-light:hover { background: #f4f5f7; }
+.btn-ticket-cta {
+  min-height: 46px;
+  padding: 0 18px;
+  color: var(--primary);
+  background: #fff;
+  border-color: rgba(255,255,255,.92);
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(23,43,77,.22), 0 0 0 2px rgba(255,255,255,.22) inset;
+}
+.btn-ticket-cta .icon { width: 18px; height: 18px; }
+.btn-ticket-cta:hover {
+  color: #4f46e5;
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 12px 30px rgba(23,43,77,.28), 0 0 0 2px rgba(255,255,255,.34) inset;
+}
 
 .subscribe-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
 .subscribe-actions .hint-text { color: var(--muted); font-size: 12px; }
