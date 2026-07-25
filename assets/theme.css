@@ -444,6 +444,9 @@ img { max-width: 100%; }
 .table td { padding: 16px; color: var(--body); font-size: 13px; border-bottom: 1px solid var(--line); }
 .table tbody tr { transition: background .15s; }
 .table tbody tr:hover { background: var(--surface-soft); }
+.table tbody tr.ticket-row-unread { background: rgba(var(--primary-rgb), .08); }
+.table tbody tr.ticket-row-unread:hover { background: rgba(var(--primary-rgb), .12); }
+.table tbody tr.ticket-row-unread .table-link strong { color: var(--primary); }
 .table tr:last-child td { border-bottom: 0; }
 .table td strong { color: var(--ink); }
 .table-link { padding: 0; background: none; border: 0; text-align: left; cursor: pointer; color: var(--body); }

@@ -237,6 +237,7 @@
   const storageKey = 'nebulax_auth_data';
   const themeKey = 'nebulax_color_mode';
   const noticeSeenKey = 'argon_notice_seen';
+  const ticketReadMapKey = 'argon_ticket_read_map';
   const notifyPrefKey = 'argon_notification_prefs';
   const notifyFieldMap = { expiryEmail: 'remind_expire', trafficEmail: 'remind_traffic' };
   const defaultNotifyPrefs = { expiryEmail: false, trafficEmail: false };
@@ -248,6 +249,7 @@
     docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
     loading: false, captchaToken: '', quickSubscribeOS: 'ios', renderId: 0
   };
+  let ticketPollTimer = 0;
 
   applyBrandColor(config.primaryColor);
   setColorMode(localStorage.getItem(themeKey) || 'light');
@@ -738,6 +740,7 @@
   }
   function clearAuth() {
     state.auth = ''; state.user = null; state.subscribe = null;
+    stopTicketPolling();
     localStorage.removeItem(storageKey);
   }
   function routeName() {
@@ -787,18 +790,83 @@
     return `<a class="nav-link${active}" href="#/${route}" data-nav="${route}">${icon(iconName)}<span>${label}</span></a>`;
   }
 
- function hasTicketNotify() {
-    return Array.isArray(state.tickets) && state.tickets.some(t => Number(t.reply_status) === 1);
+  function readTicketReadMap() {
+    try {
+      const raw = localStorage.getItem(ticketReadMapKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function writeTicketReadMap(map) {
+    localStorage.setItem(ticketReadMapKey, JSON.stringify(map || {}));
+  }
+
+  function ticketId(ticket) {
+    return String(ticket?.id ?? ticket?.ticket_id ?? '').trim();
+  }
+
+  function ticketMarker(ticket) {
+    return String(ticket?.updated_at ?? ticket?.created_at ?? ticket?.id ?? '').trim();
+  }
+
+  function serverUnreadState(ticket) {
+    const raw = ticket?.reply_status ?? ticket?.replyStatus ?? ticket?.is_reply ?? ticket?.isReply ?? ticket?.is_unread ?? ticket?.unread ?? ticket?.has_reply ?? ticket?.hasReply;
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'number') return raw === 1;
+    if (typeof raw === 'string') {
+      const value = raw.trim();
+      if (/^(1|true|yes|y)$/i.test(value)) return true;
+      if (/^(0|false|no|n)$/i.test(value)) return false;
+      const asNum = Number(value);
+      if (Number.isFinite(asNum)) return asNum === 1;
+    }
+    return null;
+  }
+
+  function isTicketUnread(ticket, readMap) {
+    const direct = serverUnreadState(ticket);
+    let unread = direct;
+    if (unread === null) {
+      const updated = Number(ticket?.updated_at || 0);
+      const created = Number(ticket?.created_at || 0);
+      unread = Number(ticket?.status) === 0 && updated > created;
+    }
+    if (!unread) return false;
+    const id = ticketId(ticket);
+    if (!id) return true;
+    const map = readMap || readTicketReadMap();
+    const marker = ticketMarker(ticket);
+    return map[id] !== marker;
+  }
+
+  function markTicketReadById(idValue) {
+    const id = String(idValue || '').trim();
+    if (!id || !Array.isArray(state.tickets)) return;
+    const ticket = state.tickets.find(item => String(item?.id ?? item?.ticket_id ?? '') === id);
+    if (!ticket) return;
+    const map = readTicketReadMap();
+    map[id] = ticketMarker(ticket);
+    writeTicketReadMap(map);
+  }
+
+  function hasTicketNotify() {
+    return unreadTicketCount() > 0;
   }
 
   function unreadTicketCount() {
-    return Array.isArray(state.tickets) ? state.tickets.filter(t => Number(t.reply_status) === 1).length : 0;
+    if (!Array.isArray(state.tickets)) return 0;
+    const map = readTicketReadMap();
+    return state.tickets.filter(item => isTicketUnread(item, map)).length;
   }
 
   function unreadTicketList(limit = 6) {
     if (!Array.isArray(state.tickets)) return [];
+    const map = readTicketReadMap();
     return state.tickets
-      .filter(item => Number(item.reply_status) === 1)
+      .filter(item => isTicketUnread(item, map))
       .sort((a, b) => Number(b.updated_at || b.created_at || 0) - Number(a.updated_at || a.created_at || 0))
       .slice(0, Math.max(1, Number(limit) || 6));
   }
@@ -818,6 +886,51 @@
         <a class="dropdown-item ticket-notice-all" href="#/tickets">${icon('ticket')} ${t('nav_tickets')}</a>
       </div>
     </div>`;
+  }
+
+  function updateTicketNoticeDropdowns() {
+    ['ticket-notice-mobile', 'ticket-notice-desktop'].forEach(name => {
+      const root = document.querySelector(`[data-dropdown="${name}"]`);
+      if (!root) return;
+      const menu = root.querySelector(`[data-dropdown-menu="${name}"]`);
+      const opened = Boolean(menu?.classList.contains('open'));
+      root.outerHTML = renderTicketNoticeDropdown(name);
+      if (opened) {
+        const next = document.querySelector(`[data-dropdown-menu="${name}"]`);
+        if (next) next.classList.add('open');
+      }
+    });
+  }
+
+  async function refreshTicketSnapshot(options = {}) {
+    if (!state.auth) return;
+    try {
+      const list = await api('/user/ticket/fetch');
+      state.tickets = Array.isArray(list) ? list : [];
+      updateTicketNoticeDropdowns();
+      if (options.refreshTicketsPage && routeName() === 'tickets' && !document.getElementById('global-dialog')?.open) {
+        render();
+      } else {
+        refreshTicketsPageUnreadUi();
+      }
+    } catch (_) {}
+  }
+
+  function stopTicketPolling() {
+    if (ticketPollTimer) {
+      clearInterval(ticketPollTimer);
+      ticketPollTimer = 0;
+    }
+  }
+
+  async function startTicketPolling() {
+    if (!state.auth) {
+      stopTicketPolling();
+      return;
+    }
+    await refreshTicketSnapshot();
+    stopTicketPolling();
+    ticketPollTimer = setInterval(() => { refreshTicketSnapshot({ refreshTicketsPage: true }); }, 30000);
   }
 
   function normalizeNoticeTags(tags) {
@@ -1379,17 +1492,40 @@
       const tickets = await api('/user/ticket/fetch');
       if (id !== state.renderId) return;
       state.tickets = Array.isArray(tickets) ? tickets : [];
+      const readMap = readTicketReadMap();
       const openCount = state.tickets.filter(t => Number(t.status) === 0).length;
-      const repliedCount = state.tickets.filter(t => Number(t.reply_status) === 1).length;
-      const rows = state.tickets.map(item => `<tr><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td>${Number(item.reply_status) === 1 ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting')}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`).join('');
+      const repliedCount = state.tickets.filter(t => isTicketUnread(t, readMap)).length;
+      const rows = state.tickets.map(item => {
+        const unread = isTicketUnread(item, readMap);
+        return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(item.id)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td class="ticket-reply-cell">${unread ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting')}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`;
+      }).join('');
       app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-ticket-cta" data-action="new-ticket">${icon('ticket')}<span>${t('new_ticket')}</span></button>`)}
         <div class="grid grid-3" style="margin-bottom:24px">
           ${statCard('ticket', state.tickets.length, tx('tickets_all'), 'bg-gradient-primary')}
           ${statCard('info', openCount, t('ticket_open'), 'bg-gradient-success')}
-          ${statCard('bell', repliedCount, t('ticket_new_reply'), 'bg-gradient-warning')}
+          <div data-ticket-stat="replied">${statCard('bell', repliedCount, t('ticket_new_reply'), 'bg-gradient-warning')}</div>
         </div>
         <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>${t('ticket_subject')}</th><th>${t('status')}</th><th>${t('ticket_reply')}</th><th>${t('create_time')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty(tx('tickets_none_title'), tx('tickets_none_sub'))}</section>`, t('nav_tickets'));
     } catch (error) { renderError(error); }
+  }
+
+  function refreshTicketsPageUnreadUi() {
+    if (routeName() !== 'tickets') return;
+    const table = app.querySelector('.table tbody');
+    if (!table || !Array.isArray(state.tickets)) return;
+    const readMap = readTicketReadMap();
+    const byId = new Map(state.tickets.map(item => [ticketId(item), item]));
+    let replied = 0;
+    table.querySelectorAll('tr[data-ticket-id]').forEach(row => {
+      const item = byId.get(String(row.dataset.ticketId || ''));
+      const unread = item ? isTicketUnread(item, readMap) : false;
+      row.classList.toggle('ticket-row-unread', unread);
+      const cell = row.querySelector('.ticket-reply-cell');
+      if (cell) cell.innerHTML = unread ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting');
+      if (unread) replied += 1;
+    });
+    const repliedNode = app.querySelector('[data-ticket-stat="replied"] .meta strong');
+    if (repliedNode) repliedNode.textContent = String(replied);
   }
 
   async function renderTraffic(id) {
@@ -1436,7 +1572,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.13')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.17')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1574,6 +1710,7 @@
       Object.assign(data, await captchaPayload(mode));
       const result = await api(`/passport/auth/${mode}`, { method: 'POST', body: data });
       saveAuth(result.auth_data);
+      await startTicketPolling();
       toast(mode === 'register' ? tx('account_created') : t('auth_welcome'));
       go('dashboard');
     } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = mode === 'register' ? t('register_submit') : t('login_submit'); }
@@ -1680,6 +1817,9 @@
     else if (action === 'new-ticket') openTicketCreate();
     else if (action === 'open-ticket') {
       document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.remove('open'));
+      markTicketReadById(target.dataset.id);
+      updateTicketNoticeDropdowns();
+      refreshTicketsPageUnreadUi();
       openTicket(target.dataset.id);
     }
     else if (action === 'generate-invite') {
@@ -1754,7 +1894,7 @@
     try { state.guest = await api('/guest/comm/config'); }
     catch (error) { state.guest = {}; toast(error.message, 'error', tx('site_config_read_failed')); }
     if (state.auth) {
-      api('/user/ticket/fetch').then(list => { state.tickets = Array.isArray(list) ? list : []; render(); }).catch(() => {});
+      await startTicketPolling();
     }
     if (!location.hash) go(state.auth ? 'dashboard' : 'login');
     else render();
