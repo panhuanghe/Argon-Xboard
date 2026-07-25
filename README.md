@@ -4,15 +4,27 @@
 
 > An Xboard front-end theme developed in Argon style, featuring modern gradients, rounded cards and a clean hierarchy. No domain binding required.
 
-## 界面预览
+## 界面预览（全部页面）
 
-| 登录页 | 仪表盘 | 节点列表 | 购买订阅 |
-| --- | --- | --- | --- |
-| ![登录页](screenshots/login.png) | ![仪表盘](screenshots/dashboard.png) | ![节点列表](screenshots/nodes.png) | ![购买订阅](screenshots/plans.png) |
+| 登录页（中文） | 登录页（英文） | 注册页 |
+| --- | --- | --- |
+| ![登录页](screenshots/login.png) | ![登录页英文](screenshots/login-en.png) | ![注册页](screenshots/register.png) |
 
-| 我的订单 | 我的工单 | 流量明细 | 个人中心 |
-| --- | --- | --- | --- |
-| ![我的订单](screenshots/orders.png) | ![我的工单](screenshots/tickets.png) | ![流量明细](screenshots/traffic.png) | ![个人中心](screenshots/account.png) |
+| 找回密码 | 仪表盘（中文） | 仪表盘（英文） |
+| --- | --- | --- |
+| ![找回密码](screenshots/forgot.png) | ![仪表盘](screenshots/dashboard.png) | ![仪表盘英文](screenshots/dashboard-en.png) |
+
+| 使用文档 | 购买订阅 | 我的订单 |
+| --- | --- | --- |
+| ![使用文档](screenshots/docs.png) | ![购买订阅](screenshots/plans.png) | ![我的订单](screenshots/orders.png) |
+
+| 我的邀请 | 节点列表 | 我的工单 |
+| --- | --- | --- |
+| ![我的邀请](screenshots/invites.png) | ![节点列表](screenshots/nodes.png) | ![我的工单](screenshots/tickets.png) |
+
+| 流量明细 | 个人中心（中文） | 个人中心（英文） |
+| --- | --- | --- |
+| ![流量明细](screenshots/traffic.png) | ![个人中心](screenshots/account.png) | ![个人中心英文](screenshots/account-en.png) |
 
 ## 特性
 
@@ -92,7 +104,7 @@ Argon-Xboard/
 ## 技术说明
 
 - 纯前端：Blade 模板 + 原生 CSS/JS，无框架依赖、无打包步骤。
-- 数据来自 Xboard 同源接口 `/api/v1`，主题只负责渲染，套餐字段由后端 `plan/fetch` 提供（`theme.js` 内的 `periodMap` 与渲染函数负责展示）。
+- 数据来自 Xboard 同源接口 `/api/v1`，主题只负责渲染，套餐字段由后端 `plan/fetch` 提供（`theme.js` 内的周期标签映射与渲染函数负责展示）。
 - 演示模式仅用于本地预览，部署后自动失效。
 
 ## 许可证
