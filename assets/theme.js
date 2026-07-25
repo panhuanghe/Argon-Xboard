@@ -1172,9 +1172,7 @@
     const cards = state.notices.map(item => '<article class="notice-card"><div class="notice-card-head"><strong>' + e(noticeTitle(item)) + '</strong><small>' + date(item?.created_at) + '</small></div><div class="notice-card-body rich-text">' + renderAnnouncementContent(noticeBody(item) || ('<p>' + tx('no_content') + '</p>')) + '</div></article>').join('');
     dialog.innerHTML = '<div class="dialog-head"><div><h3>' + tx('notice_center_title') + '</h3><small>' + tx('notice_center_sub') + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><div class="dialog-body notice-list">' + cards + '</div>';
     dialog.showModal();
-    if (!hasTicketNotify()) {
-      document.querySelectorAll('.icon-btn.has-notify').forEach(btn => btn.classList.remove('has-notify'));
-    }
+    document.querySelectorAll('.icon-btn.has-notify').forEach(btn => btn.classList.remove('has-notify'));
   }
 
   function maybeOpenPopupNotice() {
@@ -1185,6 +1183,7 @@
 
   function shell(content, title, subtitle = '') {
     const user = state.user || {};
+    const notify = hasUnreadNotice() ? ' has-notify' : '';
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
@@ -1217,7 +1216,7 @@
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="lang-mobile">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            ${renderTicketNoticeDropdown('ticket-notice-mobile')}
+            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
             <div class="dropdown" data-dropdown="user-mobile">
               <button class="avatar" type="button" data-dropdown-toggle="user-mobile" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-mobile">
@@ -1260,7 +1259,7 @@
               <div class="dropdown-menu" data-dropdown-menu="lang-desktop">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            ${renderTicketNoticeDropdown('ticket-notice-desktop')}
+            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
             <div class="dropdown" data-dropdown="user-desktop">
               <button class="avatar" type="button" data-dropdown-toggle="user-desktop" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-desktop">
@@ -1728,7 +1727,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.23')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.24')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
