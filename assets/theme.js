@@ -229,7 +229,7 @@
   const app = document.getElementById('app');
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
-    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default')
+    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default'), authCaptchaEnabled: '1'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -269,6 +269,11 @@
   function setColorMode(mode) {
     document.documentElement.dataset.theme = mode === 'dark' ? 'dark' : 'light';
     localStorage.setItem(themeKey, mode);
+  }
+
+  function isAuthCaptchaEnabled() {
+    const value = String(config.authCaptchaEnabled ?? '1').trim();
+    return value !== '0' && value.toLowerCase() !== 'false' && value !== '';
   }
 
   function readNotificationPrefs() {
@@ -352,6 +357,7 @@
       lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
       copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
       bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+      menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
       check: '<path d="m5 12 4 4L19 6"/>',
       arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
       close: '<path d="M18 6 6 18M6 6l12 12"/>',
@@ -1088,7 +1094,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.6')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.7')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
