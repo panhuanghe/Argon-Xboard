@@ -272,6 +272,14 @@
     localStorage.setItem(themeKey, mode);
   }
 
+  function setMobileMenuOpen(open) {
+    document.body.classList.toggle('mobile-menu-open', Boolean(open));
+  }
+
+  function closeMobileMenu() {
+    setMobileMenuOpen(false);
+  }
+
   function isToggleEnabled(value, fallback = '1') {
     const normalized = String(value ?? fallback).trim().toLowerCase();
     return normalized !== '' && normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no';
@@ -651,6 +659,7 @@
       </aside>
       <main class="main">
         <div class="mobile-brand">
+          <button class="icon-btn mobile-menu-trigger" type="button" data-action="open-mobile-menu" aria-label="${t('nav_main')}">${icon('menu')}</button>
           ${brand()}
           <div class="topbar-actions mobile-topbar-actions">
             <div class="dropdown" data-dropdown="lang-mobile">
@@ -668,6 +677,31 @@
             </div>
           </div>
         </div>
+        <div class="mobile-menu-backdrop" data-action="close-mobile-menu"></div>
+        <aside class="mobile-menu-drawer" aria-label="${t('nav_main')}">
+          <div class="mobile-menu-head">
+            ${brand()}
+            <button class="icon-btn" type="button" data-action="close-mobile-menu" aria-label="${tx('close')}">${icon('close')}</button>
+          </div>
+          <nav class="nav" aria-label="${t('nav_main')}">
+            ${nav('dashboard', t('nav_dashboard'), 'dashboard')}
+            ${nav('docs', t('nav_docs'), 'docs')}
+            <p class="nav-label">${t('nav_subscription')}</p>
+            ${nav('nodes', t('nav_nodes'), 'nodes')}
+            ${nav('plans', t('nav_plans'), 'plans')}
+            <p class="nav-label">${t('nav_finance')}</p>
+            ${nav('orders', t('nav_orders'), 'orders')}
+            ${nav('invites', t('nav_invites'), 'invite')}
+            <p class="nav-label">${t('nav_user')}</p>
+            ${nav('account', t('nav_account'), 'user')}
+            ${nav('tickets', t('nav_tickets'), 'ticket')}
+            ${nav('traffic', t('nav_traffic'), 'chart')}
+          </nav>
+          <div class="sidebar-bottom">
+            ${config.supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
+            <button class="nav-link" type="button" data-action="logout">${icon('logout')}<span>${t('logout')}</span></button>
+          </div>
+        </aside>
         <header class="topbar">
           <div class="topbar-title"><strong>${e(title)}</strong><span>${e(subtitle || config.tagline)}</span></div>
           <div class="topbar-actions">
@@ -1110,7 +1144,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.9')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.10')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1279,6 +1313,7 @@
 
   async function render() {
     const id = ++state.renderId;
+    closeMobileMenu();
     const dialog = document.getElementById('global-dialog');
     if (dialog?.open) dialog.close();
     let route = routeName();
@@ -1312,9 +1347,13 @@
       if (menu && !isOpen) menu.classList.add('open');
       return;
     }
-    if (target.dataset.nav) { go(target.dataset.nav); return; }
+    if (target.dataset.nav) { closeMobileMenu(); go(target.dataset.nav); return; }
     const action = target.dataset.action;
-    if (action === 'theme') {
+    if (action === 'open-mobile-menu') {
+      setMobileMenuOpen(true);
+    } else if (action === 'close-mobile-menu') {
+      closeMobileMenu();
+    } else if (action === 'theme') {
       setColorMode(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); render();
     } else if (action === 'logout') {
       clearAuth(); toast(tx('logout_done')); go('login');
