@@ -915,12 +915,6 @@
   function ticketLastSpeaker(ticket) {
     if (!ticket || typeof ticket !== 'object') return null;
 
-    const messages = Array.isArray(ticket?.message) ? ticket.message : [];
-    if (messages.length) {
-      const last = messages[messages.length - 1];
-      return messageIsFromUser(last) ? 'user' : 'admin';
-    }
-
     const speakerFlagCandidates = [
       ticket?.last_is_me, ticket?.lastIsMe,
       ticket?.reply_last_is_me, ticket?.replyLastIsMe,
@@ -938,6 +932,12 @@
     if (Number.isFinite(statusNum)) {
       if (statusNum === 2) return 'user';
       if (statusNum > 0) return 'admin';
+    }
+
+    const messages = Array.isArray(ticket?.message) ? ticket.message : [];
+    if (messages.length) {
+      const last = messages[messages.length - 1];
+      return messageIsFromUser(last) ? 'user' : 'admin';
     }
 
     return null;
@@ -1727,7 +1727,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.24')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.25')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
