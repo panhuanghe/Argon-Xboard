@@ -237,6 +237,7 @@
   const themeKey = 'nebulax_color_mode';
   const noticeSeenKey = 'argon_notice_seen';
   const notifyPrefKey = 'argon_notification_prefs';
+  const notifyFieldMap = { expiryEmail: 'remind_expire', trafficEmail: 'remind_traffic' };
   const defaultNotifyPrefs = { expiryEmail: false, trafficEmail: false };
   const state = {
     auth: localStorage.getItem(storageKey) || '',
@@ -298,6 +299,17 @@
     const next = Object.assign({}, state.notificationPrefs || readNotificationPrefs());
     next[key] = !Boolean(next[key]);
     return saveNotificationPrefs(next);
+  }
+
+  function applyServerNotificationPrefs(user) {
+    if (!user || typeof user !== 'object') return state.notificationPrefs;
+    const hasExpire = Object.prototype.hasOwnProperty.call(user, 'remind_expire');
+    const hasTraffic = Object.prototype.hasOwnProperty.call(user, 'remind_traffic');
+    if (!hasExpire && !hasTraffic) return state.notificationPrefs;
+    return saveNotificationPrefs({
+      expiryEmail: Number(user.remind_expire) === 1,
+      trafficEmail: Number(user.remind_traffic) === 1
+    });
   }
 
   function ensureGlobals() {
@@ -409,7 +421,7 @@
       : path.includes('/auth/forget') ? true
       : path.includes('/comm/sendEmailVerify') ? true
       : path.includes('/auth/login') || path.includes('/auth/register') ? { auth_data: 'Bearer preview-token', token: 'preview' }
-      : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2 }
+      : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2, remind_expire: 1, remind_traffic: 0 }
       : path.includes('/getSubscribe') ? { plan_id: 2, u: 23 * 1024 ** 3, d: 172 * 1024 ** 3, transfer_enable: 500 * 1024 ** 3, expired_at: now + 86400 * 126, subscribe_url: 'https://example.com/s/nebula-preview', plan: plans[1], device_limit: 8, speed_limit: null, reset_day: 12 }
       : path.includes('/plan/fetch') ? plans
       : path.includes('/notice/fetch') ? [{ id: 1, title: '欢迎使用 Argon-Xboard', content: '全新用户中心已经准备就绪。你可以在订阅中心复制链接，或前往套餐页面续费。', created_at: now }]
@@ -1059,10 +1071,10 @@
       const user = state.user || await api('/user/info');
       if (id !== state.renderId) return;
       state.user = user;
-      const notifyPrefs = state.notificationPrefs || readNotificationPrefs();
+      const notifyPrefs = applyServerNotificationPrefs(user) || state.notificationPrefs || readNotificationPrefs();
       const content = `${pageHead(t('nav_account'), t('nav_account'), t('account_subtitle'))}
         <div class="grid grid-2"><section class="card card-pad"><div class="profile-card"><div class="profile-avatar">${e(initials(user.email))}</div><div><h2>${e(user.email)}</h2><p>${t('joined_at')}${date(user.created_at)}</p></div></div><div class="info-list" style="margin-top:22px"><div class="info-item"><span>${t('account_balance')}</span><b>${money(user.balance)}</b></div><div class="info-item"><span>${t('plan_id')}</span><b>${e(user.plan_id || tx('no_content'))}</b></div><div class="info-item"><span>${t('expire_time')}</span><b>${date(user.expired_at)}</b></div><div class="info-item"><span>${t('account_status')}</span><b><span class="status ${user.banned ? 'danger' : 'success'}">${user.banned ? t('banned') : t('status_normal')}</span></b></div></div></section>
-        <section class="card card-pad"><div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div><div class="info-list"><div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div><div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div><div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.3')}</b></div><div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div></div></section></div>
+        <section class="card card-pad"><div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div><div class="info-list"><div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div><div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div><div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.4')}</b></div><div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div></div></section></div>
         <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>${tx('notification_settings_title')}</h2><p>${tx('notification_settings_sub')}</p></div></div><div class="notify-list"><div class="notify-item"><div class="notify-copy"><b>${tx('expiry_email_reminder')}</b><p>${tx('expiry_email_reminder_desc')}</p></div><button class="switch-toggle ${notifyPrefs.expiryEmail ? 'on' : ''}" type="button" role="switch" aria-checked="${notifyPrefs.expiryEmail ? 'true' : 'false'}" data-action="toggle-notify" data-notify-key="expiryEmail"><span></span></button></div><div class="notify-item"><div class="notify-copy"><b>${tx('traffic_email_reminder')}</b><p>${tx('traffic_email_reminder_desc')}</p></div><button class="switch-toggle ${notifyPrefs.trafficEmail ? 'on' : ''}" type="button" role="switch" aria-checked="${notifyPrefs.trafficEmail ? 'true' : 'false'}" data-action="toggle-notify" data-notify-key="trafficEmail"><span></span></button></div></div></section>
         <section class="card card-pad" style="margin-top:24px"><div class="card-title"><div><h2>${t('security')}</h2><p>${t('security_sub')}</p></div>${icon('lock')}</div><form class="form" id="password-change-form" style="max-width:520px"><div class="field"><label for="old_password">${t('current_password')}</label><input class="input" id="old_password" name="old_password" type="password" required placeholder="${t('current_password_ph')}"></div><div class="form-row"><div class="field"><label for="new_password">${t('new_password_label')}</label><input class="input" id="new_password" name="new_password" type="password" minlength="8" required placeholder="${t('password_min')}"></div><div class="field"><label for="new_password_confirmation">${t('confirm_new_password')}</label><input class="input" id="new_password_confirmation" name="new_password_confirmation" type="password" required placeholder="${t('confirm_password_ph')}"></div></div><button class="btn btn-primary" type="submit">${t('change_password')}</button></form></section>`;
       app.innerHTML = shell(content, t('nav_account'));
@@ -1266,11 +1278,22 @@
       openNoticeCenter();
     } else if (action === 'toggle-notify') {
       const key = target.dataset.notifyKey;
-      const prefs = toggleNotificationPref(key);
-      const on = Boolean(prefs?.[key]);
-      target.classList.toggle('on', on);
-      target.setAttribute('aria-checked', on ? 'true' : 'false');
-      toast(tx('notification_saved'));
+      const field = notifyFieldMap[key];
+      if (!field) return;
+      const nextOn = !target.classList.contains('on');
+      target.disabled = true;
+      try {
+        await api('/user/update', { method: 'POST', body: { [field]: nextOn ? 1 : 0 } });
+        const nextPrefs = Object.assign({}, state.notificationPrefs || readNotificationPrefs(), { [key]: nextOn });
+        saveNotificationPrefs(nextPrefs);
+        target.classList.toggle('on', nextOn);
+        target.setAttribute('aria-checked', nextOn ? 'true' : 'false');
+        toast(tx('notification_saved'));
+      } catch (error) {
+        toast(error.message, 'error');
+      } finally {
+        target.disabled = false;
+      }
     } else if (action === 'set-lang') {
       setLang(target.dataset.lang);
     }
