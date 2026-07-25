@@ -541,6 +541,19 @@ img { max-width: 100%; }
   .span-2 { grid-column: span 1; }
   .usage-metrics { grid-template-columns: 1fr; }
   .period-list, .payment-list { grid-template-columns: 1fr; }
+  .dialog { width: calc(100% - 14px); max-height: calc(100vh - 14px); border-radius: 20px; }
+  .dialog-head { padding: 14px 14px; gap: 10px; }
+  .dialog-head h3 { font-size: 19px; line-height: 1.25; }
+  .dialog-head small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .dialog-head .icon-btn { width: 40px; height: 40px; flex: 0 0 auto; }
+  .dialog-body { padding: 14px; }
+  .dialog-body.rich-text,
+  .notice-card-body { font-size: 14px; line-height: 1.72; word-break: break-word; overflow-wrap: anywhere; }
+  .notice-list { gap: 10px; }
+  .notice-card-head { align-items: flex-start; padding: 10px 12px; }
+  .notice-card-head strong { font-size: 15px; line-height: 1.35; }
+  .notice-card-head small { white-space: nowrap; font-size: 12px; }
+  .notice-card-body { padding: 12px; }
   .subscribe-url { white-space: normal; word-break: break-all; }
   .notify-item { min-height: 60px; }
   .notify-copy b { font-size: 15px; }

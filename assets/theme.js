@@ -665,7 +665,7 @@
     const dialog = document.getElementById('global-dialog');
     const title = noticeTitle(notice);
     const body = noticeBody(notice);
-    dialog.innerHTML = '<div class="dialog-head"><div><h3>' + e(title) + '</h3><small>' + date(notice?.created_at) + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><article class="dialog-body rich-text">' + safeHtml(body || ('<p>' + tx('no_content') + '</p>')) + '</article>';
+    dialog.innerHTML = '<div class="dialog-head"><div><h3>' + e(title) + '</h3><small>' + date(notice?.created_at) + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><article class="dialog-body rich-text">' + renderAnnouncementContent(body || ('<p>' + tx('no_content') + '</p>')) + '</article>';
     dialog.showModal();
   }
 
@@ -682,7 +682,7 @@
     }
     state.notices.forEach(markNoticeSeen);
     const dialog = document.getElementById('global-dialog');
-    const cards = state.notices.map(item => '<article class="notice-card"><div class="notice-card-head"><strong>' + e(noticeTitle(item)) + '</strong><small>' + date(item?.created_at) + '</small></div><div class="notice-card-body rich-text">' + safeHtml(noticeBody(item) || ('<p>' + tx('no_content') + '</p>')) + '</div></article>').join('');
+    const cards = state.notices.map(item => '<article class="notice-card"><div class="notice-card-head"><strong>' + e(noticeTitle(item)) + '</strong><small>' + date(item?.created_at) + '</small></div><div class="notice-card-body rich-text">' + renderAnnouncementContent(noticeBody(item) || ('<p>' + tx('no_content') + '</p>')) + '</div></article>').join('');
     dialog.innerHTML = '<div class="dialog-head"><div><h3>' + tx('notice_center_title') + '</h3><small>' + tx('notice_center_sub') + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><div class="dialog-body notice-list">' + cards + '</div>';
     dialog.showModal();
     if (!hasTicketNotify()) {
@@ -1211,7 +1211,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.11')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.12')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1258,7 +1258,7 @@
     if (!dialog.open) dialog.showModal();
     try {
       const article = state.docs.find(item => String(item.id) === String(articleId)) || await api(`/user/knowledge/fetch?id=${encodeURIComponent(articleId)}&language=${encodeURIComponent(state.lang || 'zh-CN')}`);
-      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(article.title)}</h3><small>${e(article.category || t('nav_docs'))}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><article class="dialog-body rich-text">${safeHtml(article.body || `<p>${tx('no_content')}</p>`)}</article>`;
+      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(article.title)}</h3><small>${e(article.category || t('nav_docs'))}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><article class="dialog-body rich-text">${renderAnnouncementContent(article.body || `<p>${tx('no_content')}</p>`)}</article>`;
     } catch (error) { dialog.close(); toast(error.message, 'error'); }
   }
 
