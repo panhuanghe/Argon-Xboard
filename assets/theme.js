@@ -229,7 +229,8 @@
   const app = document.getElementById('app');
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
-    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default'), authCaptchaEnabled: '1'
+    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default'),
+    loginCaptchaEnabled: '1', registerCaptchaEnabled: '1', authCaptchaEnabled: '1'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -271,9 +272,19 @@
     localStorage.setItem(themeKey, mode);
   }
 
-  function isAuthCaptchaEnabled() {
-    const value = String(config.authCaptchaEnabled ?? '1').trim();
-    return value !== '0' && value.toLowerCase() !== 'false' && value !== '';
+  function isToggleEnabled(value, fallback = '1') {
+    const normalized = String(value ?? fallback).trim().toLowerCase();
+    return normalized !== '' && normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no';
+  }
+
+  function isCaptchaEnabledForMode(mode = 'register') {
+    if (mode === 'login') {
+      return isToggleEnabled(config.loginCaptchaEnabled, config.authCaptchaEnabled ?? '1');
+    }
+    if (mode === 'register') {
+      return isToggleEnabled(config.registerCaptchaEnabled, config.authCaptchaEnabled ?? '1');
+    }
+    return false;
   }
 
   function readNotificationPrefs() {
@@ -688,6 +699,7 @@
 
   function authPage(mode) {
     const register = mode === 'register';
+    const captchaEnabled = isCaptchaEnabledForMode(mode);
     const guest = state.guest || {};
     const emailVerify = register && Number(guest.is_email_verify) === 1;
     const inviteForce = register && Number(guest.is_invite_force) === 1;
@@ -706,7 +718,7 @@
             <div class="field"><label for="email">${t('email')}</label><div class="input-wrap">${icon('mail')}<input class="input" id="email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></div></div>
             <div class="field"><label for="password">${t('password')}</label><div class="input-wrap">${icon('lock')}<input class="input" id="password" name="password" type="password" minlength="8" autocomplete="${register ? 'new-password' : 'current-password'}" required placeholder="${t('password_min')}"></div></div>
             ${authFields}
-            <div id="captcha-box"></div>
+            ${captchaEnabled ? '<div id="captcha-box"></div>' : ''}
             ${!register ? `<div class="form-meta"><label class="check"><input type="checkbox" checked> ${t('remember')}</label><a class="text-link" href="#/forgot">${t('forgot_password')}</a></div>` : `<p class="field-hint">${t('register_agree')}</p>`}
             <button class="btn btn-primary btn-block" type="submit">${register ? t('register_submit') : t('login_submit')} ${icon('arrow')}</button>
           </form>
@@ -716,7 +728,7 @@
       </section>
       ${authVisual()}
     </div>`;
-    mountCaptcha();
+    mountCaptcha(mode);
   }
 
   function forgotPage() {
@@ -742,8 +754,9 @@
     </div>`;
   }
 
-  async function mountCaptcha() {
+  async function mountCaptcha(mode = 'register') {
     const guest = state.guest || {};
+    if (!isCaptchaEnabledForMode(mode)) return;
     if (!Number(guest.is_captcha)) return;
     const box = document.getElementById('captcha-box');
     if (!box) return;
@@ -781,6 +794,7 @@
 
   async function captchaPayload(action = 'register') {
     const guest = state.guest || {};
+    if (!isCaptchaEnabledForMode(action)) return {};
     if (!Number(guest.is_captcha)) return {};
     if (!document.getElementById('captcha-box')) return {};
     if (guest.captcha_type === 'recaptcha-v3') {
@@ -1094,7 +1108,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.7')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.8')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1253,7 +1267,7 @@
     if (!email) return toast(t('please_enter_email'), 'error');
     button.disabled = true;
     try {
-      const captcha = await captchaPayload();
+      const captcha = await captchaPayload(routeName() === 'register' ? 'register' : 'forgot');
       await api('/passport/comm/sendEmailVerify', { method: 'POST', body: Object.assign({ email }, captcha) });
       let count = 60; button.textContent = `${count}s`;
       const timer = setInterval(() => { count -= 1; button.textContent = count > 0 ? `${count}s` : tx('resend'); if (count <= 0) { clearInterval(timer); button.disabled = false; } }, 1000);
