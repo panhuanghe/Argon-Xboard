@@ -828,6 +828,67 @@
     return parts.join('|') || ticketId(ticket);
   }
 
+  function ticketReplyStatusLabel() {
+    return /^zh/i.test(String(currentLang || '')) ? '回复状态' : 'Reply status';
+  }
+
+  function ticketRepliedText() {
+    return /^zh/i.test(String(currentLang || '')) ? '已回复' : 'Replied';
+  }
+
+  function parseIsMeFlag(raw) {
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'number') {
+      if (raw === 1) return true;
+      if (raw === 0) return false;
+    }
+    if (typeof raw === 'string') {
+      const value = raw.trim().toLowerCase();
+      if (['1', 'true', 'yes', 'y', 'user', 'me', 'client'].includes(value)) return true;
+      if (['0', 'false', 'no', 'n', 'admin', 'support', 'staff', 'system'].includes(value)) return false;
+    }
+    return null;
+  }
+
+  function ticketLastSpeaker(ticket) {
+    if (!ticket || typeof ticket !== 'object') return null;
+
+    const messages = Array.isArray(ticket?.message) ? ticket.message : [];
+    if (messages.length) {
+      const last = messages[messages.length - 1];
+      const parsed = parseIsMeFlag(last?.is_me ?? last?.isMe);
+      if (parsed !== null) return parsed ? 'user' : 'admin';
+    }
+
+    const speakerFlagCandidates = [
+      ticket?.last_is_me, ticket?.lastIsMe,
+      ticket?.reply_last_is_me, ticket?.replyLastIsMe,
+      ticket?.last_reply_is_me, ticket?.lastReplyIsMe,
+      ticket?.last_message_is_me, ticket?.lastMessageIsMe,
+      ticket?.is_me, ticket?.isMe
+    ];
+    for (const raw of speakerFlagCandidates) {
+      const parsed = parseIsMeFlag(raw);
+      if (parsed !== null) return parsed ? 'user' : 'admin';
+    }
+
+    const statusRaw = ticket?.reply_status ?? ticket?.replyStatus;
+    const statusNum = Number(statusRaw);
+    if (Number.isFinite(statusNum)) {
+      if (statusNum === 2) return 'user';
+      if (statusNum > 0) return 'admin';
+    }
+
+    return null;
+  }
+
+  function ticketReplyState(ticket) {
+    const speaker = ticketLastSpeaker(ticket);
+    if (speaker === 'admin') return 'waiting';
+    if (speaker === 'user') return 'replied';
+    return hasTicketReply(ticket) ? 'waiting' : 'waiting';
+  }
+
   function serverUnreadState(ticket) {
     const raw = ticket?.reply_status ?? ticket?.replyStatus ?? ticket?.is_reply ?? ticket?.isReply ?? ticket?.is_unread ?? ticket?.unread ?? ticket?.has_reply ?? ticket?.hasReply;
     if (typeof raw === 'boolean') return raw;
@@ -857,6 +918,7 @@
 
   function isTicketUnread(ticket, readMap) {
     if (!hasTicketReply(ticket)) return false;
+    if (ticketReplyState(ticket) !== 'waiting') return false;
     const id = ticketId(ticket);
     if (!id) return true;
     const map = readMap || readTicketReadMap();
@@ -1525,10 +1587,8 @@
         const tid = ticketId(item);
         const subject = item?.subject || item?.title || (t('new_ticket') + ' #' + tid);
         const unread = isTicketUnread(item, readMap);
-        const hasReply = hasTicketReply(item);
-        const replyCell = hasReply
-          ? `<span class="status ${unread ? 'info' : 'success'}">${t('ticket_new_reply')}</span>`
-          : t('ticket_waiting');
+        const replyState = ticketReplyState(item);
+        const replyCell = `<span class="status ${replyState === 'replied' ? 'success' : (unread ? 'info' : 'warning')}">${replyState === 'replied' ? ticketRepliedText() : t('ticket_waiting')}</span>`;
         return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(tid)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(tid)}"><strong>${e(subject)}</strong><br><small>#${e(tid)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td class="ticket-reply-cell">${replyCell}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`;
       }).join('');
       app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-ticket-cta" data-action="new-ticket">${icon('ticket')}<span>${t('new_ticket')}</span></button>`)}
@@ -1537,7 +1597,7 @@
           ${statCard('info', openCount, t('ticket_open'), 'bg-gradient-success')}
           <div data-ticket-stat="replied">${statCard('bell', repliedCount, t('ticket_new_reply'), 'bg-gradient-warning')}</div>
         </div>
-        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>${t('ticket_subject')}</th><th>${t('status')}</th><th>${t('ticket_reply')}</th><th>${t('create_time')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty(tx('tickets_none_title'), tx('tickets_none_sub'))}</section>`, t('nav_tickets'));
+        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>${t('ticket_subject')}</th><th>${t('status')}</th><th>${ticketReplyStatusLabel()}</th><th>${t('create_time')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty(tx('tickets_none_title'), tx('tickets_none_sub'))}</section>`, t('nav_tickets'));
     } catch (error) { renderError(error); }
   }
 
@@ -1551,13 +1611,11 @@
     table.querySelectorAll('tr[data-ticket-id]').forEach(row => {
       const item = byId.get(String(row.dataset.ticketId || ''));
       const unread = item ? isTicketUnread(item, readMap) : false;
-      const hasReply = item ? hasTicketReply(item) : false;
+      const replyState = item ? ticketReplyState(item) : 'waiting';
       row.classList.toggle('ticket-row-unread', unread);
       const cell = row.querySelector('.ticket-reply-cell');
       if (cell) {
-        cell.innerHTML = hasReply
-          ? `<span class="status ${unread ? 'info' : 'success'}">${t('ticket_new_reply')}</span>`
-          : t('ticket_waiting');
+        cell.innerHTML = `<span class="status ${replyState === 'replied' ? 'success' : (unread ? 'info' : 'warning')}">${replyState === 'replied' ? ticketRepliedText() : t('ticket_waiting')}</span>`;
       }
       if (unread) replied += 1;
     });
@@ -1609,7 +1667,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.18')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.19')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1673,6 +1731,22 @@
     try {
       const ticket = await api(`/user/ticket/fetch?id=${encodeURIComponent(ticketId)}`);
       const messages = Array.isArray(ticket.message) ? ticket.message : [];
+      const tid = ticketId(ticket) || String(ticketId || "").trim();
+      if (tid && Array.isArray(state.tickets)) {
+        const index = state.tickets.findIndex(item => ticketId(item) === tid);
+        if (index >= 0) {
+          state.tickets[index] = Object.assign({}, state.tickets[index], {
+            id: state.tickets[index]?.id ?? ticket?.id,
+            ticket_id: state.tickets[index]?.ticket_id ?? ticket?.ticket_id,
+            reply_status: ticket?.reply_status ?? state.tickets[index]?.reply_status,
+            replyStatus: ticket?.replyStatus ?? state.tickets[index]?.replyStatus,
+            updated_at: ticket?.updated_at ?? ticket?.update_at ?? state.tickets[index]?.updated_at,
+            message: messages
+          });
+          updateTicketNoticeDropdowns();
+          refreshTicketsPageUnreadUi();
+        }
+      }
       dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(ticket.subject)}</h3><small>${t('new_ticket')} #${e(ticket.id)}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body"><div class="ticket-thread">${messages.map(message => `<div class="ticket-message ${message.is_me ? 'me' : ''}"><b>${message.is_me ? t('mobile_me') : t('support')}</b><p>${e(message.message)}</p><small>${date(message.created_at)}</small></div>`).join('') || `<p class="field-hint">${t('ticket_waiting')}</p>`}</div>${Number(ticket.status) === 0 ? `<form class="form" id="ticket-reply-form" data-id="${e(ticket.id)}"><div class="field"><label for="ticket_reply">${t('ticket_reply')}</label><textarea class="input textarea" id="ticket_reply" name="message" required rows="4" placeholder="${t('ticket_reply')}"></textarea></div><div class="dialog-actions"><button class="btn btn-danger" type="button" data-action="close-ticket" data-id="${e(ticket.id)}">${t('close_ticket')}</button><button class="btn btn-primary" type="submit">${t('send_reply')}</button></div></form>` : `<p class="field-hint">${t('ticket_closed')}</p>`}</div>`;
     } catch (error) { dialog.close(); toast(error.message, 'error'); }
   }
