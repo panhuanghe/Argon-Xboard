@@ -59,7 +59,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.2.4.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.4/Argon-Xboard-1.2.4.zip)。
+1. 下载安装包 [`Argon-Xboard-1.2.5.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.5/Argon-Xboard-1.2.5.zip)。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色与客服地址。
 
