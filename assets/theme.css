@@ -298,6 +298,24 @@ img { max-width: 100%; }
 .icon-btn { position: relative; }
 .icon-btn:hover { color: var(--primary); border-color: var(--primary); }
 .icon-btn.has-notify::after { content: ""; position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--surface); }
+.notify-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px var(--surface);
+}
 .avatar { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, var(--primary), #825ee4); font-size: 12px; font-weight: 700; }
 .dropdown { position: relative; }
 .topbar-btn { height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); color: var(--body); font-size: 13px; cursor: pointer; }
@@ -310,6 +328,16 @@ img { max-width: 100%; }
 .dropdown-item:hover { background: var(--surface-soft); color: var(--ink); }
 .dropdown-item.active { color: var(--primary); background: rgba(var(--primary-rgb), .08); font-weight: 600; }
 .dropdown-item .icon { width: 16px; height: 16px; }
+.ticket-notice-menu { min-width: 340px; max-width: 360px; padding: 0; overflow: hidden; }
+.ticket-notice-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.ticket-notice-head strong { color: var(--ink); font-size: 13px; }
+.ticket-notice-head span { color: var(--primary); font-size: 12px; font-weight: 700; }
+.ticket-notice-list { max-height: 320px; overflow: auto; padding: 8px; display: grid; gap: 6px; }
+.ticket-notice-item { align-items: flex-start; gap: 2px; padding: 10px 10px; border-radius: 8px; }
+.ticket-notice-item b { display: block; width: 100%; color: var(--ink); font-size: 13px; line-height: 1.4; font-weight: 600; }
+.ticket-notice-item small { display: block; width: 100%; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.ticket-notice-empty { padding: 14px 10px; color: var(--muted); font-size: 12px; text-align: center; }
+.ticket-notice-all { justify-content: center; border-top: 1px solid var(--line); border-radius: 0; padding: 11px 12px; font-weight: 600; }
 .mobile-brand, .mobile-nav, .mobile-menu-backdrop, .mobile-menu-drawer { display: none; }
 .content { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px; }
 
@@ -556,6 +584,8 @@ img { max-width: 100%; }
   .mobile-topbar-actions .topbar-btn { justify-content: center; padding: 0; }
   .mobile-topbar-actions .topbar-btn span { display: none; }
   .mobile-topbar-actions .dropdown-menu { top: calc(100% + 6px); min-width: 140px; }
+  .mobile-topbar-actions .ticket-notice-menu { min-width: 280px; max-width: calc(100vw - 20px); }
+  .mobile-topbar-actions .notify-badge { min-width: 16px; height: 16px; font-size: 9px; top: -5px; right: -5px; }
   body.mobile-menu-open { overflow: hidden; }
   .mobile-menu-backdrop {
     position: fixed;

@@ -9,8 +9,8 @@
   @if (file_exists(public_path("/theme/{$theme}/favicon.ico")))
     <link rel="icon" href="/theme/{{ $theme }}/favicon.ico">
   @endif
-  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.15'))
-  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.15'))
+  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.16'))
+  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.16'))
   <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v={{ $assetVersionCss }}">
 </head>
 <body>

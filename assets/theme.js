@@ -787,8 +787,37 @@
     return `<a class="nav-link${active}" href="#/${route}" data-nav="${route}">${icon(iconName)}<span>${label}</span></a>`;
   }
 
-  function hasTicketNotify() {
-    return Array.isArray(state.tickets) && state.tickets.some(t => Number(t.status) === 0 || Number(t.reply_status) === 1);
+ function hasTicketNotify() {
+    return Array.isArray(state.tickets) && state.tickets.some(t => Number(t.reply_status) === 1);
+  }
+
+  function unreadTicketCount() {
+    return Array.isArray(state.tickets) ? state.tickets.filter(t => Number(t.reply_status) === 1).length : 0;
+  }
+
+  function unreadTicketList(limit = 6) {
+    if (!Array.isArray(state.tickets)) return [];
+    return state.tickets
+      .filter(item => Number(item.reply_status) === 1)
+      .sort((a, b) => Number(b.updated_at || b.created_at || 0) - Number(a.updated_at || a.created_at || 0))
+      .slice(0, Math.max(1, Number(limit) || 6));
+  }
+
+  function renderTicketNoticeDropdown(name) {
+    const unread = unreadTicketList(8);
+    const count = unreadTicketCount();
+    const badge = count > 0 ? `<span class="notify-badge">${count > 99 ? '99+' : count}</span>` : '';
+    const list = unread.length
+      ? unread.map(item => `<button type="button" class="dropdown-item ticket-notice-item" data-action="open-ticket" data-id="${e(item.id)}"><b>${e(item.subject || (t('new_ticket') + ' #' + item.id))}</b><small>#${e(item.id)} · ${date(item.updated_at || item.created_at)}</small></button>`).join('')
+      : `<div class="ticket-notice-empty">${tx('tickets_none_sub')}</div>`;
+    return `<div class="dropdown" data-dropdown="${e(name)}">
+      <button class="icon-btn" type="button" data-dropdown-toggle="${e(name)}" aria-haspopup="true" aria-expanded="false" aria-label="${t('notifications')}">${icon('bell')}${badge}</button>
+      <div class="dropdown-menu dropdown-menu-right ticket-notice-menu" data-dropdown-menu="${e(name)}">
+        <div class="ticket-notice-head"><strong>${t('ticket_new_reply')}</strong><span>${count}</span></div>
+        <div class="ticket-notice-list">${list}</div>
+        <a class="dropdown-item ticket-notice-all" href="#/tickets">${icon('ticket')} ${t('nav_tickets')}</a>
+      </div>
+    </div>`;
   }
 
   function normalizeNoticeTags(tags) {
@@ -894,7 +923,6 @@
 
   function shell(content, title, subtitle = '') {
     const user = state.user || {};
-    const notify = (hasTicketNotify() || hasUnreadNotice()) ? ' has-notify' : '';
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
@@ -927,7 +955,7 @@
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="lang-mobile">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
+            ${renderTicketNoticeDropdown('ticket-notice-mobile')}
             <div class="dropdown" data-dropdown="user-mobile">
               <button class="avatar" type="button" data-dropdown-toggle="user-mobile" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-mobile">
@@ -970,7 +998,7 @@
               <div class="dropdown-menu" data-dropdown-menu="lang-desktop">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
+            ${renderTicketNoticeDropdown('ticket-notice-desktop')}
             <div class="dropdown" data-dropdown="user-desktop">
               <button class="avatar" type="button" data-dropdown-toggle="user-desktop" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-desktop">
@@ -1223,7 +1251,7 @@
         const status = orderStatusLabel(order.status);
         return `<tr><td><strong>${e(order.plan?.name || tx('subscription_plan'))}</strong><br><small>${e(order.trade_no || '')}</small></td><td>${e(periodLabel(order.period))}</td><td>${money(order.total_amount)}</td><td>${date(order.created_at)}</td><td><span class="status ${status[1]}">${status[0]}</span></td><td>${Number(order.status) === 0 ? `<button class="btn btn-ghost btn-sm" data-action="cancel-order" data-trade="${e(order.trade_no)}">${t('cancel')}</button>` : '—'}</td></tr>`;
       }).join('');
-      const content = `${pageHead(t('nav_orders'), t('nav_orders'), tx('orders_subtitle'), `<a class="btn btn-primary" href="#/plans">${t('buy_plan')}</a>`)}
+      const content = `${pageHead(t('nav_orders'), t('nav_orders'), tx('orders_subtitle'), `<a class="btn btn-ticket-cta" href="#/plans">${icon('plans')}<span>${t('buy_plan')}</span></a>`)}
         <div class="grid grid-4" style="margin-bottom:24px">
           ${statCard('orders', state.orders.length, t('total_orders'), 'bg-gradient-info')}
           ${statCard('wallet', money(totalPaid), t('paid_amount'), 'bg-gradient-success')}
@@ -1287,7 +1315,7 @@
       const stat = state.invite.stat || [];
       const codes = Array.isArray(state.invite.codes) ? state.invite.codes : [];
       const rows = codes.map(item => { const link = `${location.origin}/#/register?code=${encodeURIComponent(item.code)}`; return `<tr><td><strong>${e(item.code)}</strong></td><td>${e(item.pv || 0)}</td><td>${date(item.created_at)}</td><td><button class="btn btn-secondary btn-sm" data-action="copy-invite" data-link="${e(link)}">${icon('copy')} ${t('copy_link')}</button></td></tr>`; }).join('');
-      const content = `${pageHead(t('nav_invites'), t('nav_invites'), t('invites_sub'), `<button class="btn btn-primary" data-action="generate-invite">${t('generate_code')}</button>`)}
+      const content = `${pageHead(t('nav_invites'), t('nav_invites'), t('invites_sub'), `<button class="btn btn-ticket-cta" data-action="generate-invite">${icon('invite')}<span>${t('generate_code')}</span></button>`)}
         <div class="grid grid-4">
           ${statCard('invite', e(stat[0] || 0), t('registered_users'), 'bg-gradient-primary')}
           ${statCard('wallet', money(stat[1]), t('valid_commission'), 'bg-gradient-success')}
@@ -1650,7 +1678,10 @@
       try { await navigator.clipboard.writeText(target.dataset.link || ''); toast(t('copy_invite_url')); } catch { toast(t('copy_failed'), 'error'); }
     } else if (action === 'open-doc') openDoc(target.dataset.id);
     else if (action === 'new-ticket') openTicketCreate();
-    else if (action === 'open-ticket') openTicket(target.dataset.id);
+    else if (action === 'open-ticket') {
+      document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.remove('open'));
+      openTicket(target.dataset.id);
+    }
     else if (action === 'generate-invite') {
       try { await api('/user/invite/save'); toast(tx('invite_created')); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'close-ticket') {
