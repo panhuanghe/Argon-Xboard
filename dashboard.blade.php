@@ -9,8 +9,8 @@
   @if (file_exists(public_path("/theme/{$theme}/favicon.ico")))
     <link rel="icon" href="/theme/{{ $theme }}/favicon.ico">
   @endif
-  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.8'))
-  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.8'))
+  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.9'))
+  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.9'))
   <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v={{ $assetVersionCss }}">
 </head>
 <body>
@@ -34,9 +34,6 @@
       'lang' => $theme_config['default_i18n'] ?? 'zh-CN',
       'loginCaptchaEnabled' => isset($theme_config['login_captcha_enabled'])
         ? (string)$theme_config['login_captcha_enabled']
-        : (isset($theme_config['auth_captcha_enabled']) ? (string)$theme_config['auth_captcha_enabled'] : '1'),
-      'registerCaptchaEnabled' => isset($theme_config['register_captcha_enabled'])
-        ? (string)$theme_config['register_captcha_enabled']
         : (isset($theme_config['auth_captcha_enabled']) ? (string)$theme_config['auth_captcha_enabled'] : '1'),
       'primaryColor' => $theme_config['primary_color'] ?? '#5e72e4',
       'logoUrl' => $theme_config['logo_url'] ?? '',

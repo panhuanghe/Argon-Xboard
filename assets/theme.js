@@ -230,7 +230,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', registerCaptchaEnabled: '1', authCaptchaEnabled: '1'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -277,12 +277,16 @@
     return normalized !== '' && normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no';
   }
 
-  function isCaptchaEnabledForMode(mode = 'register') {
-    if (mode === 'login') {
-      return isToggleEnabled(config.loginCaptchaEnabled, config.authCaptchaEnabled ?? '1');
-    }
+  function isBackendCaptchaEnabled(guest = state.guest || {}) {
+    return Number(guest?.is_captcha) === 1;
+  }
+
+  function isCaptchaEnabledForMode(mode = 'register', guest = state.guest || {}) {
     if (mode === 'register') {
-      return isToggleEnabled(config.registerCaptchaEnabled, config.authCaptchaEnabled ?? '1');
+      return isBackendCaptchaEnabled(guest);
+    }
+    if (mode === 'login') {
+      return isBackendCaptchaEnabled(guest) && isToggleEnabled(config.loginCaptchaEnabled, config.authCaptchaEnabled ?? '1');
     }
     return false;
   }
@@ -699,8 +703,8 @@
 
   function authPage(mode) {
     const register = mode === 'register';
-    const captchaEnabled = isCaptchaEnabledForMode(mode);
     const guest = state.guest || {};
+    const captchaEnabled = isCaptchaEnabledForMode(mode, guest);
     const emailVerify = register && Number(guest.is_email_verify) === 1;
     const inviteForce = register && Number(guest.is_invite_force) === 1;
     const urlCode = register ? (new URLSearchParams((location.hash.split('?')[1] || '')).get('code') || '') : '';
@@ -756,8 +760,7 @@
 
   async function mountCaptcha(mode = 'register') {
     const guest = state.guest || {};
-    if (!isCaptchaEnabledForMode(mode)) return;
-    if (!Number(guest.is_captcha)) return;
+    if (!isCaptchaEnabledForMode(mode, guest)) return;
     const box = document.getElementById('captcha-box');
     if (!box) return;
     if (isPreview) {
@@ -794,8 +797,7 @@
 
   async function captchaPayload(action = 'register') {
     const guest = state.guest || {};
-    if (!isCaptchaEnabledForMode(action)) return {};
-    if (!Number(guest.is_captcha)) return {};
+    if (!isCaptchaEnabledForMode(action, guest)) return {};
     if (!document.getElementById('captcha-box')) return {};
     if (guest.captcha_type === 'recaptcha-v3') {
       const token = await window.grecaptcha.execute(guest.recaptcha_v3_site_key, { action });
@@ -1108,7 +1110,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.8')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.9')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>

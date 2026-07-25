@@ -1,7 +1,7 @@
 {
   "name": "Argon-Xboard",
   "description": "基于 Argon Design System 的 Xboard 用户端主题：现代渐变、圆角卡片、清晰的层级结构，无域名绑定",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "images": "",
   "configs": [
     {
@@ -27,18 +27,8 @@
       "default_value": "zh-CN"
     },
     {
-      "label": "登录页真人认证",
+      "label": "登录页真人认证（注册页跟随后台）",
       "field_name": "login_captcha_enabled",
-      "field_type": "select",
-      "select_options": {
-        "1": "开启",
-        "0": "关闭"
-      },
-      "default_value": "1"
-    },
-    {
-      "label": "注册页真人认证",
-      "field_name": "register_captcha_enabled",
       "field_type": "select",
       "select_options": {
         "1": "开启",
