@@ -88,7 +88,11 @@
       traffic_up_short: '上',
       traffic_down_short: '下',
       send_code_success: '验证码已发送，请检查邮箱',
-      resend: '重新发送'
+      resend: '重新发送',
+      notice_center_title: '站内提醒',
+      notice_center_sub: '这里会展示最新通知与公告。',
+      notice_popup_title: '消息提醒',
+      notice_empty: '暂无新的提醒'
     },
     en: {
       docs_subtitle: 'Install, connect, and common troubleshooting notes',
@@ -158,7 +162,11 @@
       traffic_up_short: 'Up',
       traffic_down_short: 'Down',
       send_code_success: 'Verification code sent. Please check your inbox.',
-      resend: 'Resend'
+      resend: 'Resend',
+      notice_center_title: 'Notifications',
+      notice_center_sub: 'Latest announcements and messages are shown here.',
+      notice_popup_title: 'Message',
+      notice_empty: 'No new notifications'
     }
   };
   function tx(key, fallback = '') {
@@ -213,6 +221,7 @@
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
   const storageKey = 'nebulax_auth_data';
   const themeKey = 'nebulax_color_mode';
+  const noticeSeenKey = 'argon_notice_seen';
   const state = {
     auth: localStorage.getItem(storageKey) || '',
     lang: initialLang,
@@ -434,9 +443,110 @@
     return Array.isArray(state.tickets) && state.tickets.some(t => Number(t.status) === 0 || Number(t.reply_status) === 1);
   }
 
+  function normalizeNoticeTags(tags) {
+    if (Array.isArray(tags)) return tags.map(tag => String(tag || '').trim()).filter(Boolean);
+    if (typeof tags === 'string') {
+      const raw = tags.trim();
+      if (!raw) return [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map(tag => String(tag || '').trim()).filter(Boolean);
+      } catch (_) {}
+      return raw.split(/[，,|/\s]+/).map(tag => String(tag || '').trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  function noticeId(notice) {
+    return String(notice?.id ?? notice?.notice_id ?? notice?.created_at ?? notice?.title ?? '').trim();
+  }
+
+  function noticeBody(notice) {
+    return notice?.content || notice?.body || notice?.message || '';
+  }
+
+  function noticeTitle(notice) {
+    return notice?.title || tx('notice_popup_title');
+  }
+
+  function readSeenNotices() {
+    try {
+      const raw = localStorage.getItem(noticeSeenKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function writeSeenNotices(map) {
+    localStorage.setItem(noticeSeenKey, JSON.stringify(map || {}));
+  }
+
+  function isNoticeSeen(notice) {
+    const id = noticeId(notice);
+    if (!id) return false;
+    const map = readSeenNotices();
+    return Boolean(map[id]);
+  }
+
+  function markNoticeSeen(notice) {
+    const id = noticeId(notice);
+    if (!id) return;
+    const map = readSeenNotices();
+    map[id] = Date.now();
+    writeSeenNotices(map);
+  }
+
+  function hasUnreadNotice() {
+    return Array.isArray(state.notices) && state.notices.some(item => !isNoticeSeen(item));
+  }
+
+  function isPopupNotice(notice) {
+    const tags = normalizeNoticeTags(notice?.tags);
+    return tags.some(tag => /^(弹窗|popup|modal)$/i.test(tag));
+  }
+
+  function openNoticeDialog(notice) {
+    if (!notice) return;
+    markNoticeSeen(notice);
+    const dialog = document.getElementById('global-dialog');
+    const title = noticeTitle(notice);
+    const body = noticeBody(notice);
+    dialog.innerHTML = '<div class="dialog-head"><div><h3>' + e(title) + '</h3><small>' + date(notice?.created_at) + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><article class="dialog-body rich-text">' + safeHtml(body || ('<p>' + tx('no_content') + '</p>')) + '</article>';
+    dialog.showModal();
+  }
+
+  async function openNoticeCenter() {
+    if (!Array.isArray(state.notices) || !state.notices.length) {
+      try {
+        const list = await api('/user/notice/fetch');
+        state.notices = Array.isArray(list) ? list : [];
+      } catch (_) {}
+    }
+    if (!state.notices.length) {
+      toast(tx('notice_empty'));
+      return;
+    }
+    state.notices.forEach(markNoticeSeen);
+    const dialog = document.getElementById('global-dialog');
+    const cards = state.notices.map(item => '<article class="notice-card"><div class="notice-card-head"><strong>' + e(noticeTitle(item)) + '</strong><small>' + date(item?.created_at) + '</small></div><div class="notice-card-body rich-text">' + safeHtml(noticeBody(item) || ('<p>' + tx('no_content') + '</p>')) + '</div></article>').join('');
+    dialog.innerHTML = '<div class="dialog-head"><div><h3>' + tx('notice_center_title') + '</h3><small>' + tx('notice_center_sub') + '</small></div><button class="icon-btn" data-action="close-dialog">' + icon('close') + '</button></div><div class="dialog-body notice-list">' + cards + '</div>';
+    dialog.showModal();
+    if (!hasTicketNotify()) {
+      document.querySelectorAll('.icon-btn.has-notify').forEach(btn => btn.classList.remove('has-notify'));
+    }
+  }
+
+  function maybeOpenPopupNotice() {
+    if (!Array.isArray(state.notices) || !state.notices.length) return;
+    const next = state.notices.find(item => isPopupNotice(item) && !isNoticeSeen(item));
+    if (next) openNoticeDialog(next);
+  }
+
   function shell(content, title, subtitle = '') {
     const user = state.user || {};
-    const notify = hasTicketNotify() ? ' has-notify' : '';
+    const notify = (hasTicketNotify() || hasUnreadNotice()) ? ' has-notify' : '';
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
@@ -468,7 +578,7 @@
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="lang-mobile">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn${notify}" data-action="go-tickets" aria-label="${t('notifications')}">${icon('bell')}</button>
+            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
             <div class="dropdown" data-dropdown="user-mobile">
               <button class="avatar" type="button" data-dropdown-toggle="user-mobile" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-mobile">
@@ -486,7 +596,7 @@
               <div class="dropdown-menu" data-dropdown-menu="lang-desktop">${langList.map(l => `<button type="button" class="dropdown-item ${l.code === state.lang ? 'active' : ''}" data-action="set-lang" data-lang="${e(l.code)}">${e(l.name)}</button>`).join('')}</div>
             </div>
             <button class="icon-btn" data-action="theme" aria-label="${t('theme_toggle')}">${icon(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon')}</button>
-            <button class="icon-btn${notify}" data-action="go-tickets" aria-label="${t('notifications')}">${icon('bell')}</button>
+            <button class="icon-btn${notify}" data-action="go-notices" aria-label="${t('notifications')}">${icon('bell')}</button>
             <div class="dropdown" data-dropdown="user-desktop">
               <button class="avatar" type="button" data-dropdown-toggle="user-desktop" aria-haspopup="true" aria-expanded="false" title="${e(user.email || '')}">${e(initials(user.email))}</button>
               <div class="dropdown-menu dropdown-menu-right" data-dropdown-menu="user-desktop">
@@ -628,6 +738,7 @@
       ]);
       if (id !== state.renderId) return;
       state.user = user; state.subscribe = subscribe; state.notices = Array.isArray(notices) ? notices : [];
+      maybeOpenPopupNotice();
       const used = Number(subscribe.u || 0) + Number(subscribe.d || 0);
       const total = Number(subscribe.transfer_enable || 0);
       const percent = total ? Math.min(100, Math.round(used / total * 100)) : 0;
@@ -1102,8 +1213,8 @@
     else if (action === 'send-code') sendEmailCode(target);
     else if (action === 'cancel-order') {
       try { await api('/user/order/cancel', { method: 'POST', body: { trade_no: target.dataset.trade } }); toast(tx('order_cancelled')); render(); } catch (error) { toast(error.message, 'error'); }
-    } else if (action === 'go-tickets') {
-      go('tickets');
+    } else if (action === 'go-notices') {
+      openNoticeCenter();
     } else if (action === 'set-lang') {
       setLang(target.dataset.lang);
     }

@@ -367,6 +367,12 @@ img { max-width: 100%; }
 .rich-text h1, .rich-text h2, .rich-text h3 { color: var(--ink); line-height: 1.3; }
 .rich-text img { max-width: 100%; border-radius: var(--radius-sm); }
 .rich-text a { color: var(--primary); text-decoration: underline; }
+.notice-list { display: grid; gap: 12px; }
+.notice-card { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); overflow: hidden; }
+.notice-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.notice-card-head strong { color: var(--ink); font-size: 13px; line-height: 1.4; }
+.notice-card-head small { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.notice-card-body { padding: 14px; }
 .ticket-thread { display: grid; gap: 12px; margin-bottom: 22px; }
 .ticket-message { width: min(88%, 420px); padding: 12px 14px; border-radius: 12px 12px 12px 4px; background: var(--surface-soft); }
 .ticket-message.me { justify-self: end; border-radius: 12px 12px 4px 12px; background: rgba(var(--primary-rgb), .1); }
