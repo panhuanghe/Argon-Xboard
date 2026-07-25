@@ -850,14 +850,41 @@
     return null;
   }
 
+  function messageIsFromUser(message) {
+    if (!message || typeof message !== 'object') return false;
+
+    const directCandidates = [
+      message?.is_me, message?.isMe,
+      message?.from_me, message?.fromMe,
+      message?.user_message, message?.userMessage,
+      message?.is_user, message?.isUser,
+      message?.from_user, message?.fromUser
+    ];
+    for (const raw of directCandidates) {
+      const parsed = parseIsMeFlag(raw);
+      if (parsed !== null) return parsed;
+    }
+
+    const roleRaw = String(message?.role ?? message?.sender_role ?? message?.senderRole ?? message?.sender_type_name ?? '').trim().toLowerCase();
+    if (['user', 'client', 'member', 'customer', 'self', 'me'].includes(roleRaw)) return true;
+    if (['admin', 'support', 'staff', 'system', 'service'].includes(roleRaw)) return false;
+
+    const typeNum = Number(message?.type ?? message?.sender_type ?? message?.senderType);
+    if (Number.isFinite(typeNum)) {
+      if (typeNum === 1) return true;
+      if (typeNum === 0 || typeNum === 2) return false;
+    }
+
+    return false;
+  }
+
   function ticketLastSpeaker(ticket) {
     if (!ticket || typeof ticket !== 'object') return null;
 
     const messages = Array.isArray(ticket?.message) ? ticket.message : [];
     if (messages.length) {
       const last = messages[messages.length - 1];
-      const parsed = parseIsMeFlag(last?.is_me ?? last?.isMe);
-      if (parsed !== null) return parsed ? 'user' : 'admin';
+      return messageIsFromUser(last) ? 'user' : 'admin';
     }
 
     const speakerFlagCandidates = [
@@ -910,7 +937,7 @@
     const replyCount = Number(ticket?.reply_count ?? ticket?.replyCount ?? 0);
     if (Number.isFinite(replyCount) && replyCount > 0) return true;
     const messages = Array.isArray(ticket?.message) ? ticket.message : [];
-    if (messages.some(message => !message?.is_me)) return true;
+    if (messages.some(message => !messageIsFromUser(message))) return true;
     const updated = ticketTimeValue(ticket?.updated_at ?? ticket?.update_at);
     const created = ticketTimeValue(ticket?.created_at);
     return updated > 0 && created > 0 && updated > created;
@@ -1667,7 +1694,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.20')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.21')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1747,7 +1774,10 @@
           refreshTicketsPageUnreadUi();
         }
       }
-      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(ticket.subject)}</h3><small>${t('new_ticket')} #${e(ticket.id)}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body"><div class="ticket-thread">${messages.map(message => `<div class="ticket-message ${message.is_me ? 'me' : ''}"><b>${message.is_me ? t('mobile_me') : t('support')}</b><p>${e(message.message)}</p><small>${date(message.created_at)}</small></div>`).join('') || `<p class="field-hint">${t('ticket_waiting')}</p>`}</div>${Number(ticket.status) === 0 ? `<form class="form" id="ticket-reply-form" data-id="${e(ticket.id)}"><div class="field"><label for="ticket_reply">${t('ticket_reply')}</label><textarea class="input textarea" id="ticket_reply" name="message" required rows="4" placeholder="${t('ticket_reply')}"></textarea></div><div class="dialog-actions"><button class="btn btn-danger" type="button" data-action="close-ticket" data-id="${e(ticket.id)}">${t('close_ticket')}</button><button class="btn btn-primary" type="submit">${t('send_reply')}</button></div></form>` : `<p class="field-hint">${t('ticket_closed')}</p>`}</div>`;
+      dialog.innerHTML = `<div class="dialog-head"><div><h3>${e(ticket.subject)}</h3><small>${t('new_ticket')} #${e(ticket.id)}</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body"><div class="ticket-thread">${messages.map(message => {
+        const isMine = messageIsFromUser(message);
+        return `<div class="ticket-message ${isMine ? 'me' : ''}"><b>${isMine ? t('mobile_me') : t('support')}</b><p>${e(message.message)}</p><small>${date(message.created_at)}</small></div>`;
+      }).join('') || `<p class="field-hint">${t('ticket_waiting')}</p>`}</div>${Number(ticket.status) === 0 ? `<form class="form" id="ticket-reply-form" data-id="${e(ticket.id)}"><div class="field"><label for="ticket_reply">${t('ticket_reply')}</label><textarea class="input textarea" id="ticket_reply" name="message" required rows="4" placeholder="${t('ticket_reply')}"></textarea></div><div class="dialog-actions"><button class="btn btn-danger" type="button" data-action="close-ticket" data-id="${e(ticket.id)}">${t('close_ticket')}</button><button class="btn btn-primary" type="submit">${t('send_reply')}</button></div></form>` : `<p class="field-hint">${t('ticket_closed')}</p>`}</div>`;
     } catch (error) { dialog.close(); toast(error.message, 'error'); }
   }
 
