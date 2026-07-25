@@ -534,6 +534,57 @@
     </section>`;
   }
 
+  function getQuickClientDownloadLink(client, os) {
+    const currentOS = String(os || 'ios').toLowerCase();
+    const name = String(client || '').toLowerCase();
+    const links = {
+      shadowrocket: 'https://apps.apple.com/app/shadowrocket/id932747118',
+      surge: currentOS === 'ios' ? 'https://apps.apple.com/app/surge-5/id1442620678' : 'https://nssurge.com/',
+      stash: 'https://stash.wiki/',
+      'clash-meta': currentOS === 'android'
+        ? 'https://github.com/MetaCubeX/ClashMetaForAndroid/releases'
+        : 'https://github.com/clash-verge-rev/clash-verge-rev/releases',
+      clash: 'https://github.com/Fndroid/clash_for_windows_pkg/releases',
+      'sing-box': 'https://sing-box.sagernet.org/clients/',
+      singbox: 'https://sing-box.sagernet.org/clients/',
+      surfboard: 'https://play.google.com/store/apps/details?id=com.getsurfboard'
+    };
+    return links[name] || '';
+  }
+
+  function waitClientLaunch(timeoutMs = 1500) {
+    return new Promise(resolve => {
+      let finished = false;
+      const cleanup = () => {
+        clearTimeout(timer);
+        document.removeEventListener('visibilitychange', onVisibilityChange, true);
+        window.removeEventListener('pagehide', onHidden, true);
+        window.removeEventListener('blur', onBlur, true);
+      };
+      const done = launched => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        resolve(Boolean(launched));
+      };
+      const onHidden = () => done(true);
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'hidden' || document.hidden) done(true);
+      };
+      const onBlur = () => setTimeout(() => {
+        if (document.visibilityState === 'hidden' || document.hidden) done(true);
+      }, 80);
+      const timer = setTimeout(() => done(document.visibilityState === 'hidden' || document.hidden), timeoutMs);
+      if (document.visibilityState === 'hidden' || document.hidden) {
+        done(true);
+        return;
+      }
+      document.addEventListener('visibilitychange', onVisibilityChange, true);
+      window.addEventListener('pagehide', onHidden, true);
+      window.addEventListener('blur', onBlur, true);
+    });
+  }
+
   function openSubscribeQr(subscribeUrl) {
     const safe = safeHttpUrl(subscribeUrl);
     if (!safe) {
@@ -555,14 +606,20 @@
     const templateUrl = buildTemplateSubscribeUrl(subscribeUrl, flag);
     const importUrl = buildQuickImportUrl(client, templateUrl);
     if (importUrl) {
+      const launchProbe = waitClientLaunch();
       window.location.href = importUrl;
+      const launched = await launchProbe;
+      if (launched) return;
+      const download = getQuickClientDownloadLink(client, state.quickSubscribeOS);
+      if (download) {
+        const goInstall = window.confirm('未检测到对应客户端，是否前往下载页面安装？');
+        if (goInstall) window.open(download, '_blank', 'noopener');
+      } else {
+        toast('未检测到客户端，请先安装对应客户端。', 'warning');
+      }
     } else {
       window.open(templateUrl, '_blank', 'noopener');
     }
-    try {
-      await navigator.clipboard.writeText(templateUrl);
-      toast(t('copy_subscribe_url'));
-    } catch (_) {}
   }
 
   function icon(name) {
@@ -1577,7 +1634,12 @@
       const nextOS = String(target.dataset.os || '').toLowerCase();
       if (nextOS && nextOS !== state.quickSubscribeOS) {
         state.quickSubscribeOS = nextOS;
-        render();
+        const card = target.closest('.quick-subscribe-card');
+        if (card) {
+          card.outerHTML = renderQuickSubscribeModule(state.subscribe || {});
+        } else {
+          render();
+        }
       }
     } else if (action === 'open-quick-client') {
       await openQuickClientImport(target.dataset.client, target.dataset.flag);
