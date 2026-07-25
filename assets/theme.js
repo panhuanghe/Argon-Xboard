@@ -1667,7 +1667,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.19')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.20')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1724,14 +1724,14 @@
     if (!dialog.open) dialog.showModal();
   }
 
-  async function openTicket(ticketId) {
+  async function openTicket(ticketRefId) {
     const dialog = document.getElementById('global-dialog');
     dialog.innerHTML = `<div class="dialog-head"><h3>${tx('ticket_loading')}</h3><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div>`;
     if (!dialog.open) dialog.showModal();
     try {
-      const ticket = await api(`/user/ticket/fetch?id=${encodeURIComponent(ticketId)}`);
+      const ticket = await api(`/user/ticket/fetch?id=${encodeURIComponent(ticketRefId)}`);
       const messages = Array.isArray(ticket.message) ? ticket.message : [];
-      const tid = ticketId(ticket) || String(ticketId || "").trim();
+      const tid = ticketId(ticket) || String(ticketRefId || "").trim();
       if (tid && Array.isArray(state.tickets)) {
         const index = state.tickets.findIndex(item => ticketId(item) === tid);
         if (index >= 0) {
