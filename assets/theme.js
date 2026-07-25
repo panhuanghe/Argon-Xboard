@@ -808,33 +808,55 @@
     return String(ticket?.id ?? ticket?.ticket_id ?? '').trim();
   }
 
+  function ticketTimeValue(value) {
+    if (value === null || value === undefined || value === '') return 0;
+    const asNum = Number(value);
+    if (Number.isFinite(asNum) && asNum > 0) return asNum < 1e12 ? asNum * 1000 : asNum;
+    const asDate = Date.parse(String(value));
+    return Number.isFinite(asDate) ? asDate : 0;
+  }
+
   function ticketMarker(ticket) {
-    return String(ticket?.updated_at ?? ticket?.created_at ?? ticket?.id ?? '').trim();
+    const parts = [
+      ticket?.updated_at, ticket?.update_at,
+      ticket?.reply_updated_at, ticket?.reply_at, ticket?.reply_time, ticket?.last_reply_at,
+      ticket?.reply_last_id, ticket?.last_reply_id,
+      ticket?.reply_status, ticket?.replyStatus,
+      ticket?.reply_count, ticket?.replyCount,
+      ticket?.created_at
+    ].map(value => String(value ?? '').trim()).filter(Boolean);
+    return parts.join('|') || ticketId(ticket);
   }
 
   function serverUnreadState(ticket) {
     const raw = ticket?.reply_status ?? ticket?.replyStatus ?? ticket?.is_reply ?? ticket?.isReply ?? ticket?.is_unread ?? ticket?.unread ?? ticket?.has_reply ?? ticket?.hasReply;
     if (typeof raw === 'boolean') return raw;
-    if (typeof raw === 'number') return raw === 1;
+    if (typeof raw === 'number') return raw > 0;
     if (typeof raw === 'string') {
       const value = raw.trim();
       if (/^(1|true|yes|y)$/i.test(value)) return true;
       if (/^(0|false|no|n)$/i.test(value)) return false;
       const asNum = Number(value);
-      if (Number.isFinite(asNum)) return asNum === 1;
+      if (Number.isFinite(asNum)) return asNum > 0;
+      if (/^(new|reply|replied|unread)$/i.test(value)) return true;
     }
     return null;
   }
 
-  function isTicketUnread(ticket, readMap) {
+  function hasTicketReply(ticket) {
     const direct = serverUnreadState(ticket);
-    let unread = direct;
-    if (unread === null) {
-      const updated = Number(ticket?.updated_at || 0);
-      const created = Number(ticket?.created_at || 0);
-      unread = Number(ticket?.status) === 0 && updated > created;
-    }
-    if (!unread) return false;
+    if (direct !== null) return direct;
+    const replyCount = Number(ticket?.reply_count ?? ticket?.replyCount ?? 0);
+    if (Number.isFinite(replyCount) && replyCount > 0) return true;
+    const messages = Array.isArray(ticket?.message) ? ticket.message : [];
+    if (messages.some(message => !message?.is_me)) return true;
+    const updated = ticketTimeValue(ticket?.updated_at ?? ticket?.update_at);
+    const created = ticketTimeValue(ticket?.created_at);
+    return updated > 0 && created > 0 && updated > created;
+  }
+
+  function isTicketUnread(ticket, readMap) {
+    if (!hasTicketReply(ticket)) return false;
     const id = ticketId(ticket);
     if (!id) return true;
     const map = readMap || readTicketReadMap();
@@ -845,7 +867,7 @@
   function markTicketReadById(idValue) {
     const id = String(idValue || '').trim();
     if (!id || !Array.isArray(state.tickets)) return;
-    const ticket = state.tickets.find(item => String(item?.id ?? item?.ticket_id ?? '') === id);
+    const ticket = state.tickets.find(item => ticketId(item) === id);
     if (!ticket) return;
     const map = readTicketReadMap();
     map[id] = ticketMarker(ticket);
@@ -867,7 +889,7 @@
     const map = readTicketReadMap();
     return state.tickets
       .filter(item => isTicketUnread(item, map))
-      .sort((a, b) => Number(b.updated_at || b.created_at || 0) - Number(a.updated_at || a.created_at || 0))
+      .sort((a, b) => ticketTimeValue(b?.updated_at ?? b?.created_at) - ticketTimeValue(a?.updated_at ?? a?.created_at))
       .slice(0, Math.max(1, Number(limit) || 6));
   }
 
@@ -876,7 +898,11 @@
     const count = unreadTicketCount();
     const badge = count > 0 ? `<span class="notify-badge">${count > 99 ? '99+' : count}</span>` : '';
     const list = unread.length
-      ? unread.map(item => `<button type="button" class="dropdown-item ticket-notice-item" data-action="open-ticket" data-id="${e(item.id)}"><b>${e(item.subject || (t('new_ticket') + ' #' + item.id))}</b><small>#${e(item.id)} · ${date(item.updated_at || item.created_at)}</small></button>`).join('')
+      ? unread.map(item => {
+        const id = ticketId(item);
+        const subject = item?.subject || item?.title || (t('new_ticket') + ' #' + id);
+        return `<button type="button" class="dropdown-item ticket-notice-item" data-action="open-ticket" data-id="${e(id)}"><b>${e(subject)}</b><small>#${e(id)} · ${date(item.updated_at || item.created_at)}</small></button>`;
+      }).join('')
       : `<div class="ticket-notice-empty">${tx('tickets_none_sub')}</div>`;
     return `<div class="dropdown" data-dropdown="${e(name)}">
       <button class="icon-btn" type="button" data-dropdown-toggle="${e(name)}" aria-haspopup="true" aria-expanded="false" aria-label="${t('notifications')}">${icon('bell')}${badge}</button>
@@ -1496,8 +1522,14 @@
       const openCount = state.tickets.filter(t => Number(t.status) === 0).length;
       const repliedCount = state.tickets.filter(t => isTicketUnread(t, readMap)).length;
       const rows = state.tickets.map(item => {
+        const tid = ticketId(item);
+        const subject = item?.subject || item?.title || (t('new_ticket') + ' #' + tid);
         const unread = isTicketUnread(item, readMap);
-        return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(item.id)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(item.id)}"><strong>${e(item.subject)}</strong><br><small>#${e(item.id)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td class="ticket-reply-cell">${unread ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting')}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`;
+        const hasReply = hasTicketReply(item);
+        const replyCell = hasReply
+          ? `<span class="status ${unread ? 'info' : 'success'}">${t('ticket_new_reply')}</span>`
+          : t('ticket_waiting');
+        return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(tid)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(tid)}"><strong>${e(subject)}</strong><br><small>#${e(tid)}</small></button></td><td><span class="status ${Number(item.status) === 0 ? 'success' : 'warning'}">${Number(item.status) === 0 ? t('ticket_open') : t('ticket_closed')}</span></td><td class="ticket-reply-cell">${replyCell}</td><td>${date(item.updated_at || item.created_at)}</td></tr>`;
       }).join('');
       app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-ticket-cta" data-action="new-ticket">${icon('ticket')}<span>${t('new_ticket')}</span></button>`)}
         <div class="grid grid-3" style="margin-bottom:24px">
@@ -1519,9 +1551,14 @@
     table.querySelectorAll('tr[data-ticket-id]').forEach(row => {
       const item = byId.get(String(row.dataset.ticketId || ''));
       const unread = item ? isTicketUnread(item, readMap) : false;
+      const hasReply = item ? hasTicketReply(item) : false;
       row.classList.toggle('ticket-row-unread', unread);
       const cell = row.querySelector('.ticket-reply-cell');
-      if (cell) cell.innerHTML = unread ? `<span class="status info">${t('ticket_new_reply')}</span>` : t('ticket_waiting');
+      if (cell) {
+        cell.innerHTML = hasReply
+          ? `<span class="status ${unread ? 'info' : 'success'}">${t('ticket_new_reply')}</span>`
+          : t('ticket_waiting');
+      }
       if (unread) replied += 1;
     });
     const repliedNode = app.querySelector('[data-ticket-stat="replied"] .meta strong');
@@ -1572,7 +1609,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.17')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.18')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
@@ -1816,11 +1853,16 @@
     } else if (action === 'open-doc') openDoc(target.dataset.id);
     else if (action === 'new-ticket') openTicketCreate();
     else if (action === 'open-ticket') {
+      const openId = String(target.dataset.id || '').trim();
+      if (!openId) {
+        toast(t('request_failed'), 'error');
+        return;
+      }
       document.querySelectorAll('[data-dropdown-menu]').forEach(m => m.classList.remove('open'));
-      markTicketReadById(target.dataset.id);
+      markTicketReadById(openId);
       updateTicketNoticeDropdowns();
       refreshTicketsPageUnreadUi();
-      openTicket(target.dataset.id);
+      openTicket(openId);
     }
     else if (action === 'generate-invite') {
       try { await api('/user/invite/save'); toast(tx('invite_created')); render(); } catch (error) { toast(error.message, 'error'); }
