@@ -771,6 +771,15 @@
     const stamp = Number(value) < 1e12 ? Number(value) * 1000 : Number(value);
     return new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(stamp));
   }
+  function ticketDateTime(value) {
+    if (!value) return t('long_term');
+    const number = Number(value);
+    const stamp = Number.isFinite(number) ? (number < 1e12 ? number * 1000 : number) : NaN;
+    const parsed = new Date(stamp);
+    if (Number.isNaN(parsed.getTime())) return t('long_term');
+    const pad = part => String(part).padStart(2, '0');
+    return `${parsed.getFullYear()}/${pad(parsed.getMonth() + 1)}/${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:${pad(parsed.getSeconds())}`;
+  }
   function daysUntil(value) {
     if (!value) return null;
     const stamp = Number(value) < 1e12 ? Number(value) * 1000 : Number(value);
@@ -1688,7 +1697,7 @@
         const unread = isTicketUnread(item, readMap);
         const replyState = ticketReplyState(item);
         const replyCell = `<span class="status ${replyState === 'replied' ? 'success' : (unread ? 'info' : 'warning')}">${replyState === 'replied' ? ticketRepliedText() : t('ticket_waiting')}</span>`;
-        return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(tid)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(tid)}"><strong>${e(subject)}</strong><br><small>#${e(tid)}</small></button></td><td class="ticket-status-cell"><span class="status ${isTicketClosed(item) ? 'warning' : 'success'}">${isTicketClosed(item) ? t('ticket_closed') : t('ticket_open')}</span></td><td class="ticket-reply-cell">${replyCell}</td><td>${date(item.created_at)}</td><td class="ticket-last-reply-cell">${date(ticketLastReplyTime(item))}</td><td class="ticket-actions-cell">${renderTicketActions(item)}</td></tr>`;
+        return `<tr class="${unread ? 'ticket-row-unread' : ''}" data-ticket-id="${e(tid)}"><td><button class="table-link" data-action="open-ticket" data-id="${e(tid)}"><strong>${e(subject)}</strong><br><small>#${e(tid)}</small></button></td><td class="ticket-status-cell"><span class="status ${isTicketClosed(item) ? 'warning' : 'success'}">${isTicketClosed(item) ? t('ticket_closed') : t('ticket_open')}</span></td><td class="ticket-reply-cell">${replyCell}</td><td>${ticketDateTime(item.created_at)}</td><td class="ticket-last-reply-cell">${ticketDateTime(ticketLastReplyTime(item))}</td><td class="ticket-actions-cell">${renderTicketActions(item)}</td></tr>`;
       }).join('');
       app.innerHTML = shell(`${pageHead(t('nav_tickets'), t('nav_tickets'), t('tickets_title'), `<button class="btn btn-ticket-cta" data-action="new-ticket">${icon('ticket')}<span>${t('new_ticket')}</span></button>`)}
         <div class="grid grid-3" style="margin-bottom:24px">
@@ -1720,7 +1729,7 @@
         cell.innerHTML = `<span class="status ${replyState === 'replied' ? 'success' : (unread ? 'info' : 'warning')}">${replyState === 'replied' ? ticketRepliedText() : t('ticket_waiting')}</span>`;
       }
       const lastReplyCell = row.querySelector('.ticket-last-reply-cell');
-      if (lastReplyCell && item) lastReplyCell.textContent = date(ticketLastReplyTime(item));
+      if (lastReplyCell && item) lastReplyCell.textContent = ticketDateTime(ticketLastReplyTime(item));
       const actionsCell = row.querySelector('.ticket-actions-cell');
       if (actionsCell && item) actionsCell.innerHTML = renderTicketActions(item);
     });

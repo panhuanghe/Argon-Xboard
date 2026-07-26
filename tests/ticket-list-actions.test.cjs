@@ -42,12 +42,14 @@ const context = vm.createContext({
 });
 
 vm.runInContext([
+  extractFunction('ticketDateTime'),
   extractFunction('ticketId'),
   extractFunction('isTicketClosed'),
   extractFunction('closedTicketCount'),
   extractFunction('ticketLastReplyTime'),
   extractFunction('renderTicketActions'),
   extractFunction('renderTicketCloseConfirm'),
+  'this.ticketDateTime = ticketDateTime;',
   'this.closedTicketCount = closedTicketCount;',
   'this.ticketLastReplyTime = ticketLastReplyTime;',
   'this.renderTicketActions = renderTicketActions;',
@@ -55,6 +57,7 @@ vm.runInContext([
 ].join('\n'), context);
 
 const {
+  ticketDateTime,
   closedTicketCount,
   ticketLastReplyTime,
   renderTicketActions,
@@ -72,6 +75,20 @@ test('counts only closed tickets', () => {
 test('last reply time prefers updated_at and falls back to created_at', () => {
   assert.equal(ticketLastReplyTime({ updated_at: 200, created_at: 100 }), 200);
   assert.equal(ticketLastReplyTime({ created_at: 100 }), 100);
+});
+
+test('ticket times include browser-local hours, minutes and seconds', () => {
+  const localMilliseconds = new Date(2026, 6, 26, 13, 4, 5).getTime();
+  assert.equal(ticketDateTime(localMilliseconds), '2026/07/26 13:04:05');
+  assert.equal(ticketDateTime(Math.floor(localMilliseconds / 1000)), '2026/07/26 13:04:05');
+});
+
+test('ticket table uses second-precision times before and after refresh', () => {
+  assert.match(themeSource, /ticketDateTime\(item\.created_at\)/);
+  assert.equal(
+    (themeSource.match(/ticketDateTime\(ticketLastReplyTime\(item\)\)/g) || []).length,
+    2
+  );
 });
 
 test('open tickets expose view and close actions', () => {
