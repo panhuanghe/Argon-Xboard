@@ -6,6 +6,8 @@ const vm = require('node:vm');
 
 const themePath = path.join(__dirname, '..', 'assets', 'theme.js');
 const themeSource = fs.readFileSync(themePath, 'utf8');
+const themeCssPath = path.join(__dirname, '..', 'assets', 'theme.css');
+const themeCssSource = fs.readFileSync(themeCssPath, 'utf8');
 
 function extractFunction(name) {
   const marker = `  function ${name}(`;
@@ -98,4 +100,11 @@ test('ticket table wires closed statistics, last reply, actions and confirmation
   assert.match(themeSource, /t\('action'\)/);
   assert.match(themeSource, /action === 'request-close-ticket'/);
   assert.match(themeSource, /action === 'confirm-close-ticket'/);
+});
+
+test('ticket actions remain readable on desktop and narrow screens', () => {
+  assert.match(themeCssSource, /\.ticket-table\s*\{/);
+  assert.match(themeCssSource, /\.ticket-actions\s*\{/);
+  assert.match(themeCssSource, /\.ticket-action:disabled\s*\{/);
+  assert.match(themeCssSource, /\.ticket-close-confirm-copy\s*\{/);
 });

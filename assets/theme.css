@@ -451,6 +451,13 @@ img { max-width: 100%; }
 .table td strong { color: var(--ink); }
 .table-link { padding: 0; background: none; border: 0; text-align: left; cursor: pointer; color: var(--body); }
 .table-link:hover strong { color: var(--primary); }
+.ticket-table { min-width: 960px; }
+.ticket-actions { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.ticket-actions > span { width: 1px; height: 16px; background: var(--line); }
+.ticket-action { padding: 2px 0; border: 0; color: var(--primary); background: transparent; font: inherit; cursor: pointer; }
+.ticket-action:hover { text-decoration: underline; }
+.ticket-action.danger { color: var(--danger); }
+.ticket-action:disabled { color: var(--muted); cursor: not-allowed; opacity: .55; text-decoration: none; }
 .empty { min-height: 240px; display: grid; place-content: center; justify-items: center; padding: 32px; color: var(--muted); text-align: center; }
 .empty .icon { width: 36px; height: 36px; margin-bottom: 12px; color: var(--primary); }
 .empty h3 { margin: 0 0 6px; color: var(--ink); font-size: 16px; }
@@ -543,6 +550,7 @@ img { max-width: 100%; }
 .dialog-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 22px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .dialog-head h3 { margin: 0; font-size: 16px; color: var(--ink); }
 .dialog-body { padding: 22px; }
+.ticket-close-confirm-copy { margin: 0; color: var(--body); font-size: 14px; line-height: 1.6; }
 .period-list, .payment-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .choice { position: relative; display: block; cursor: pointer; }
 .choice input { position: absolute; opacity: 0; }
