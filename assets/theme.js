@@ -944,6 +944,13 @@
   }
 
   function ticketReplyState(ticket) {
+    const statusRaw = ticket?.reply_status ?? ticket?.replyStatus;
+    if (statusRaw !== null && statusRaw !== undefined && statusRaw !== '') {
+      const statusNum = Number(statusRaw);
+      if (statusNum === 0) return 'waiting';
+      if (statusNum === 1) return 'replied';
+    }
+
     const speaker = ticketLastSpeaker(ticket);
     if (speaker === 'admin') return 'waiting';
     if (speaker === 'user') return 'replied';
@@ -1727,7 +1734,7 @@
             <div class="info-list">
               <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
-              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.25')}</b></div>
+              <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.version || '1.2.26')}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
           </section>
