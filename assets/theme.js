@@ -104,7 +104,20 @@
       expiry_email_reminder_desc: '订阅即将到期时将收到邮件提醒',
       traffic_email_reminder: '流量邮件提醒',
       traffic_email_reminder_desc: '当订阅流量即将耗尽时将收到邮件提醒',
-      notification_saved: '提醒设置已更新'
+      notification_saved: '提醒设置已更新',
+      telegram_title: '绑定 Telegram',
+      telegram_start: '立即开始',
+      telegram_bound: '已绑定',
+      telegram_dialog_title: '绑定 Telegram',
+      telegram_dialog_subtitle: '按以下两步完成绑定，绑定后可接收服务通知。',
+      telegram_step_one: '第一步',
+      telegram_open_bot: '打开 Telegram 搜索',
+      telegram_step_two: '第二步',
+      telegram_send_command: '向机器人发送以下命令',
+      telegram_copy_command: '复制绑定命令',
+      telegram_command_copied: '绑定命令已复制',
+      telegram_missing_command: '暂时无法生成绑定命令，请稍后再试',
+      telegram_load_failed: 'Telegram 绑定引导加载失败，请稍后再试'
     },
     en: {
       docs_subtitle: 'Install, connect, and common troubleshooting notes',
@@ -190,7 +203,20 @@
       expiry_email_reminder_desc: 'Get an email reminder before your subscription expires.',
       traffic_email_reminder: 'Traffic email reminder',
       traffic_email_reminder_desc: 'Get an email reminder before your traffic is exhausted.',
-      notification_saved: 'Notification preferences updated'
+      notification_saved: 'Notification preferences updated',
+      telegram_title: 'Bind Telegram',
+      telegram_start: 'Start binding',
+      telegram_bound: 'Bound',
+      telegram_dialog_title: 'Bind Telegram',
+      telegram_dialog_subtitle: 'Follow these two steps to receive service notifications in Telegram.',
+      telegram_step_one: 'Step 1',
+      telegram_open_bot: 'Open Telegram and search for',
+      telegram_step_two: 'Step 2',
+      telegram_send_command: 'Send this command to the bot',
+      telegram_copy_command: 'Copy bind command',
+      telegram_command_copied: 'Bind command copied',
+      telegram_missing_command: 'The bind command is not available yet. Please try again later.',
+      telegram_load_failed: 'Could not load the Telegram binding guide. Please try again later.'
     }
   };
   function tx(key, fallback = '') {
@@ -255,7 +281,7 @@
     auth: localStorage.getItem(storageKey) || '',
     lang: initialLang,
     notificationPrefs: readNotificationPrefs(),
-    guest: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
+    guest: {}, appConfig: {}, user: null, subscribe: null, plans: [], orders: [], notices: [],
     docs: [], docSearch: '', invite: null, nodes: [], tickets: [], traffic: [],
     loading: false, captchaToken: '', quickSubscribeOS: 'ios', renderId: 0
   };
@@ -295,6 +321,28 @@
   function isToggleEnabled(value, fallback = '1') {
     const normalized = String(value ?? fallback).trim().toLowerCase();
     return normalized !== '' && normalized !== '0' && normalized !== 'false' && normalized !== 'off' && normalized !== 'no';
+  }
+
+  function isTelegramBindingEnabled(appConfig = {}) {
+    return isToggleEnabled(appConfig?.is_telegram, '0');
+  }
+
+  function telegramBotUrl(username) {
+    const normalized = String(username || '').trim();
+    return /^[A-Za-z0-9_]{5,32}$/.test(normalized) ? `https://t.me/${normalized}` : '';
+  }
+
+  function telegramBindCommand(subscribeUrl) {
+    const safe = safeHttpUrl(subscribeUrl);
+    return safe ? `/bind ${safe}` : '';
+  }
+
+  function renderTelegramBindingRow(user = {}) {
+    const bound = Boolean(user?.telegram_id);
+    return `<div class="info-item telegram-binding-row">
+      <span>${tx('telegram_title')}</span>
+      <button class="btn btn-secondary btn-sm" type="button" data-action="bind-telegram"${bound ? ' disabled' : ''}>${bound ? tx('telegram_bound') : tx('telegram_start')}</button>
+    </div>`;
   }
 
   function isBackendCaptchaEnabled(guest = state.guest || {}) {
@@ -609,6 +657,38 @@
     dialog.showModal();
   }
 
+  function renderTelegramBindDialog(botInfo = {}, subscribe = {}) {
+    const username = String(botInfo?.username || '').trim();
+    const botUrl = telegramBotUrl(username);
+    const command = telegramBindCommand(subscribe?.subscribe_url);
+    if (!botUrl || !command) {
+      return `<div class="dialog-head"><div><h3>${tx('telegram_dialog_title')}</h3><small>${tx('telegram_dialog_subtitle')}</small></div><button class="icon-btn" data-action="close-dialog" aria-label="${tx('close')}">${icon('close')}</button></div><div class="dialog-body"><p class="field-hint">${tx('telegram_missing_command')}</p></div>`;
+    }
+    return `<div class="dialog-head"><div><h3>${tx('telegram_dialog_title')}</h3><small>${tx('telegram_dialog_subtitle')}</small></div><button class="icon-btn" data-action="close-dialog" aria-label="${tx('close')}">${icon('close')}</button></div>
+      <div class="dialog-body telegram-bind-dialog">
+        <section class="telegram-bind-step"><h4>${tx('telegram_step_one')}</h4><p>${tx('telegram_open_bot')} <a class="text-link" href="${e(botUrl)}" target="_blank" rel="noopener">@${e(username)}</a></p></section>
+        <section class="telegram-bind-step"><h4>${tx('telegram_step_two')}</h4><p>${tx('telegram_send_command')}</p><button class="telegram-bind-command" type="button" data-action="copy-telegram-command" data-command="${e(command)}"><code>${e(command)}</code><span>${tx('telegram_copy_command')}</span></button></section>
+      </div>`;
+  }
+
+  async function openTelegramBindDialog() {
+    const dialog = document.getElementById('global-dialog');
+    dialog.innerHTML = `<div class="dialog-head"><h3>${tx('telegram_dialog_title')}</h3><button class="icon-btn" data-action="close-dialog" aria-label="${tx('close')}">${icon('close')}</button></div><div class="dialog-body"><p class="field-hint">${t('loading')}</p></div>`;
+    if (!dialog.open) dialog.showModal();
+    try {
+      const [botInfo, subscribe] = await Promise.all([
+        api('/user/telegram/getBotInfo'),
+        api('/user/getSubscribe')
+      ]);
+      const content = renderTelegramBindDialog(botInfo, subscribe);
+      if (!content.includes('data-action="copy-telegram-command"')) throw new Error(tx('telegram_missing_command'));
+      dialog.innerHTML = content;
+    } catch (error) {
+      dialog.close();
+      toast(error.message || tx('telegram_load_failed'), 'error');
+    }
+  }
+
   async function openQuickClientImport(client, flag) {
     const subscribeUrl = safeHttpUrl(state.subscribe?.subscribe_url || '');
     if (!subscribeUrl) {
@@ -722,7 +802,9 @@
       : path.includes('/auth/forget') ? true
       : path.includes('/comm/sendEmailVerify') ? true
       : path.includes('/auth/login') || path.includes('/auth/register') ? { auth_data: 'Bearer preview-token', token: 'preview' }
-      : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2, remind_expire: 1, remind_traffic: 0 }
+      : path.includes('/user/comm/config') ? { is_telegram: 1 }
+      : path.includes('/user/telegram/getBotInfo') ? { username: 'argon_preview_bot' }
+      : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2, remind_expire: 1, remind_traffic: 0, telegram_id: null }
       : path.includes('/getSubscribe') ? { plan_id: 2, u: 23 * 1024 ** 3, d: 172 * 1024 ** 3, transfer_enable: 500 * 1024 ** 3, expired_at: now + 86400 * 126, subscribe_url: 'https://example.com/s/nebula-preview', plan: plans[1], device_limit: 8, speed_limit: null, reset_day: 12 }
       : path.includes('/plan/fetch') ? plans
       : path.includes('/notice/fetch') ? [{ id: 1, title: '欢迎使用 Argon-Xboard', content: '全新用户中心已经准备就绪。你可以在订阅中心复制链接，或前往套餐页面续费。', created_at: now }]
@@ -749,7 +831,7 @@
     localStorage.setItem(storageKey, state.auth);
   }
   function clearAuth() {
-    state.auth = ''; state.user = null; state.subscribe = null;
+    state.auth = ''; state.user = null; state.subscribe = null; state.appConfig = {};
     stopTicketPolling();
     localStorage.removeItem(storageKey);
   }
@@ -1779,7 +1861,7 @@
           <section class="card card-pad">
             <div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div>
             <div class="info-list">
-              <div class="info-item"><span>${t('ui_theme')}</span><button class="btn btn-secondary btn-sm" data-action="theme">${t('theme_toggle')}</button></div>
+              ${isTelegramBindingEnabled(state.appConfig) ? renderTelegramBindingRow(user) : ''}
               <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
               <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.frontendVersion)}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
@@ -1958,6 +2040,8 @@
       Object.assign(data, await captchaPayload(mode));
       const result = await api(`/passport/auth/${mode}`, { method: 'POST', body: data });
       saveAuth(result.auth_data);
+      try { state.appConfig = await api('/user/comm/config'); }
+      catch (_) { state.appConfig = {}; }
       await startTicketPolling();
       toast(mode === 'register' ? tx('account_created') : t('auth_welcome'));
       go('dashboard');
@@ -2032,6 +2116,20 @@
       closeMobileMenu();
     } else if (action === 'theme') {
       setColorMode(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); render();
+    } else if (action === 'bind-telegram') {
+      if (isTelegramBindingEnabled(state.appConfig) && !state.user?.telegram_id) await openTelegramBindDialog();
+    } else if (action === 'copy-telegram-command') {
+      const command = target.dataset.command || '';
+      if (!command) {
+        toast(tx('telegram_missing_command'), 'error');
+      } else {
+        try {
+          await navigator.clipboard.writeText(command);
+          toast(tx('telegram_command_copied'));
+        } catch (_) {
+          toast(t('copy_failed'), 'error');
+        }
+      }
     } else if (action === 'logout') {
       clearAuth(); toast(tx('logout_done')); go('login');
     } else if (action === 'copy-sub') {
@@ -2149,6 +2247,8 @@
     try { state.guest = await api('/guest/comm/config'); }
     catch (error) { state.guest = {}; toast(error.message, 'error', tx('site_config_read_failed')); }
     if (state.auth) {
+      try { state.appConfig = await api('/user/comm/config'); }
+      catch (_) { state.appConfig = {}; }
       await startTicketPolling();
     }
     if (!location.hash) go(state.auth ? 'dashboard' : 'login');
