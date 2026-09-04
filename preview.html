@@ -142,10 +142,6 @@
           <textarea id="dbg_announcement">这是 Argon-Xboard 的本地演示数据。安装到 Xboard 后将自动读取真实账户与订阅信息。</textarea>
         </div>
         <div class="dbg-field">
-          <label>客服地址 supportUrl</label>
-          <input type="text" id="dbg_supportUrl" value="https://example.com">
-        </div>
-        <div class="dbg-field">
           <label>页脚文字 footerText</label>
           <input type="text" id="dbg_footerText" value="Argon-Xboard · Xboard 用户端主题">
         </div>
@@ -190,7 +186,7 @@
       const config = Object.assign({
         title: 'Argon-Xboard', brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', lang: 'zh-CN',
         primaryColor: '#5e72e4', logoUrl: '', announcement: '',
-        supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题'
+        footerText: 'Argon-Xboard · Xboard 用户端主题'
       }, dbg.config || {});
       window.NEBULAX_PREVIEW = true;
       window.XBOARD_ASSETS = './assets';
@@ -218,7 +214,7 @@
         config: {
           brandName: 'Argon-Xboard', tagline: '清晰、现代、稳定的连接体验', lang: 'zh-CN', primaryColor: '#5e72e4',
           logoUrl: '', announcement: '这是 Argon-Xboard 的本地演示数据。安装到 Xboard 后将自动读取真实账户与订阅信息。',
-          supportUrl: 'https://example.com', footerText: 'Argon-Xboard · Xboard 用户端主题', customHtml: ''
+          footerText: 'Argon-Xboard · Xboard 用户端主题', customHtml: ''
         }
       };
       let dbg = {};
@@ -235,7 +231,6 @@
       $('dbg_tagline').value = dbg.config.tagline || '';
       $('dbg_logoUrl').value = dbg.config.logoUrl || '';
       $('dbg_announcement').value = dbg.config.announcement || '';
-      $('dbg_supportUrl').value = dbg.config.supportUrl || '';
       $('dbg_footerText').value = dbg.config.footerText || '';
       $('dbg_customHtml').value = dbg.config.customHtml || '';
       $('dbg_primaryColor').value = dbg.config.primaryColor || '#5e72e4';
@@ -287,7 +282,6 @@
             primaryColor: color,
             logoUrl: $('dbg_logoUrl').value.trim(),
             announcement: $('dbg_announcement').value.trim(),
-            supportUrl: $('dbg_supportUrl').value.trim(),
             footerText: $('dbg_footerText').value.trim(),
             customHtml: $('dbg_customHtml').value
           }

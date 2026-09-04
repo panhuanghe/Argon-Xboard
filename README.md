@@ -59,9 +59,9 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.2.30.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.30/Argon-Xboard-1.2.30.zip)。
+1. 下载安装包 [`Argon-Xboard-1.2.31.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.31/Argon-Xboard-1.2.31.zip)。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
-3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色与客服地址。
+3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色等主题选项；客服群组链接由 Xboard 后台的群组链接统一管控。
 
 > 安装包内部结构为 `Argon-Xboard/...`，符合 Xboard 的主题上传规则。直接把仓库内容按 `Argon-Xboard/` 目录打包同样可用。
 
@@ -89,13 +89,12 @@ Argon-Xboard/
 | `primary_color` | 主题色（十六进制） | `#5e72e4` |
 | `logo_url` | Logo 地址（留空显示图形标识） | 空 |
 | `announcement` | 首页公告（留空用后台公告） | 空 |
-| `support_url` | 客服地址 | 空 |
 | `footer_text` | 页脚文字 | `Powered by Argon-Xboard · Xboard` |
 | `custom_html` | 自定义页脚 HTML | 空 |
 
 ## 自定义与二次开发
 
-- 主题色、品牌、Logo、公告、客服与页脚均在后台主题配置中填写，无需改代码。
+- 主题色、品牌、Logo、公告与页脚在后台主题配置中填写，无需改代码；客服群组链接直接读取 Xboard 后台群组配置。
 - 想要更深改造，直接修改 `assets/theme.css` 与 `assets/theme.js`：
   - `theme.css` 顶部定义了 CSS 变量（`--primary`、`--primary-strong`、`--surface-soft`、`--ink` 等），改这里即可整体换肤。
   - `theme.js` 是一次性 IIFE，加载时读取 `window.XBOARD_THEME`；所有接口走同源 `/api/v1`，Xboard 后端原生兼容，无需修改 API 路径。

@@ -265,8 +265,8 @@
   const app = document.getElementById('app');
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
-    primaryColor: '#5e72e4', logoUrl: '', announcement: '', supportUrl: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.30'
+    primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.31'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -431,6 +431,10 @@
     } catch (_) {
       return '';
     }
+  }
+
+  function backendSupportUrl() {
+    return safeHttpUrl(state.guest?.telegram_discuss_link);
   }
 
   function renderLink(href, label) {
@@ -798,7 +802,7 @@
     ];
     const tickets = [{ id: 12, level: 1, reply_status: 1, status: 0, subject: '客户端连接问题', created_at: now - 7200, updated_at: now - 1800 }];
     const queryId = new URLSearchParams(path.split('?')[1] || '').get('id');
-    const data = path.includes('/guest/comm/config') ? { app_description: '一个清爽、快速的网络服务中心', is_invite_force: 0, is_email_verify: 0, is_captcha: 1, captcha_type: 'turnstile' }
+    const data = path.includes('/guest/comm/config') ? { app_description: '一个清爽、快速的网络服务中心', telegram_discuss_link: 'https://t.me/argon_preview_group', is_invite_force: 0, is_email_verify: 0, is_captcha: 1, captcha_type: 'turnstile' }
       : path.includes('/auth/forget') ? true
       : path.includes('/comm/sendEmailVerify') ? true
       : path.includes('/auth/login') || path.includes('/auth/register') ? { auth_data: 'Bearer preview-token', token: 'preview' }
@@ -1314,6 +1318,7 @@
   function shell(content, title, subtitle = '') {
     const user = state.user || {};
     const notify = hasUnreadNotice() ? ' has-notify' : '';
+    const supportUrl = backendSupportUrl();
     return `<div class="app-shell">
       <aside class="sidebar">
         ${brand()}
@@ -1332,7 +1337,7 @@
           ${nav('traffic', t('nav_traffic'), 'chart')}
         </nav>
         <div class="sidebar-bottom">
-          ${config.supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
+          ${supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
           <button class="nav-link" type="button" data-action="logout">${icon('logout')}<span>${t('logout')}</span></button>
         </div>
       </aside>
@@ -1377,7 +1382,7 @@
             ${nav('traffic', t('nav_traffic'), 'chart')}
           </nav>
           <div class="sidebar-bottom">
-            ${config.supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
+            ${supportUrl ? `<div class="support-card"><b>${t('help_title')}</b><p>${t('help_text')}</p><a class="btn btn-secondary btn-sm" href="${e(supportUrl)}" target="_blank" rel="noopener">${icon('support')} ${t('help_contact')}</a></div>` : ''}
             <button class="nav-link" type="button" data-action="logout">${icon('logout')}<span>${t('logout')}</span></button>
           </div>
         </aside>
@@ -1847,6 +1852,7 @@
       if (id !== state.renderId) return;
       state.user = user;
       const notifyPrefs = applyServerNotificationPrefs(user) || state.notificationPrefs || readNotificationPrefs();
+      const supportUrl = backendSupportUrl();
       const content = `${pageHead(t('nav_account'), t('nav_account'), t('account_subtitle'))}
         <div class="grid grid-2">
           <section class="card card-pad">
@@ -1862,7 +1868,7 @@
             <div class="card-title"><div><h2>${t('settings')}</h2><p>${t('settings_sub')}</p></div></div>
             <div class="info-list">
               ${isTelegramBindingEnabled(state.appConfig) ? renderTelegramBindingRow(user) : ''}
-              <div class="info-item"><span>${t('support')}</span>${config.supportUrl ? `<a class="text-link" href="${e(config.supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
+              <div class="info-item"><span>${t('support')}</span>${supportUrl ? `<a class="btn btn-secondary btn-sm" href="${e(supportUrl)}" target="_blank" rel="noopener">${t('open_support')}</a>` : `<b>${t('not_configured')}</b>`}</div>
               <div class="info-item"><span>${t('frontend_version')}</span><b>Argon-Xboard ${e(config.frontendVersion)}</b></div>
               <div class="info-item"><span>${t('login_status')}</span><button class="btn btn-danger btn-sm" data-action="logout">${t('logout')}</button></div>
             </div>
