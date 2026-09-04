@@ -266,7 +266,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.31'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.32'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -434,7 +434,7 @@
   }
 
   function backendSupportUrl() {
-    return safeHttpUrl(state.guest?.telegram_discuss_link);
+    return safeHttpUrl(state.appConfig?.telegram_discuss_link);
   }
 
   function renderLink(href, label) {
@@ -806,7 +806,7 @@
       : path.includes('/auth/forget') ? true
       : path.includes('/comm/sendEmailVerify') ? true
       : path.includes('/auth/login') || path.includes('/auth/register') ? { auth_data: 'Bearer preview-token', token: 'preview' }
-      : path.includes('/user/comm/config') ? { is_telegram: 1 }
+      : path.includes('/user/comm/config') ? { is_telegram: 1, telegram_discuss_link: 'https://t.me/argon_preview_group' }
       : path.includes('/user/telegram/getBotInfo') ? { username: 'argon_preview_bot' }
       : path.includes('/user/info') ? { email: 'demo@argon-xboard.dev', balance: 2680, commission_balance: 0, expired_at: now + 86400 * 126, created_at: now - 86400 * 93, plan_id: 2, remind_expire: 1, remind_traffic: 0, telegram_id: null }
       : path.includes('/getSubscribe') ? { plan_id: 2, u: 23 * 1024 ** 3, d: 172 * 1024 ** 3, transfer_enable: 500 * 1024 ** 3, expired_at: now + 86400 * 126, subscribe_url: 'https://example.com/s/nebula-preview', plan: plans[1], device_limit: 8, speed_limit: null, reset_day: 12 }
