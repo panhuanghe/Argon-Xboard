@@ -251,6 +251,8 @@ img { max-width: 100%; }
   box-shadow: 0 4px 10px rgba(var(--primary-rgb), .24);
 }
 .quick-client-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.quick-client-entry { display: grid; grid-template-rows: 1fr auto; gap: 6px; min-width: 0; }
+.quick-client-entry > .text-link { justify-self: start; font-size: 12px; }
 .quick-client-item {
   min-height: 56px;
   padding: 10px 8px;
@@ -270,6 +272,8 @@ img { max-width: 100%; }
 .quick-client-item small { color: var(--muted); font-size: 11px; }
 .quick-qr-body { display: grid; gap: 12px; justify-items: center; text-align: center; }
 .quick-qr-image { width: 220px; max-width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fff; padding: 10px; }
+.quick-qr-code { width: 220px; max-width: 100%; background: #fff; }
+.quick-qr-code svg { display: block; width: 100%; height: auto; }
 .quick-qr-link { margin: 0; color: var(--body); font-size: 12px; line-height: 1.5; word-break: break-all; }
 
 .app-shell { min-height: 100vh; display: flex; }
@@ -289,7 +293,7 @@ img { max-width: 100%; }
 .support-card b { display: block; color: var(--ink); font-size: 13px; }
 .support-card p { margin: 6px 0 12px; color: var(--body); font-size: 12px; line-height: 1.5; }
 
-.main { flex: 1; min-height: 100vh; margin-left: var(--sidebar); background: var(--surface-soft); }
+.main { flex: 1; min-width: 0; min-height: 100vh; margin-left: var(--sidebar); background: var(--surface-soft); }
 .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .topbar-title strong { display: block; font-size: 15px; color: var(--ink); }
 .topbar-title span { color: var(--muted); font-size: 12px; }
@@ -440,6 +444,8 @@ img { max-width: 100%; }
 
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; }
+.orders-table { min-width: 720px; }
+.orders-table th, .orders-table td { white-space: nowrap; }
 .table th { padding: 14px 16px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--line); }
 .table td { padding: 16px; color: var(--body); font-size: 13px; border-bottom: 1px solid var(--line); }
 .table tbody tr { transition: background .15s; }
@@ -472,6 +478,9 @@ img { max-width: 100%; }
 .info-item:last-child { border-bottom: 0; }
 .info-item span { color: var(--muted); font-size: 13px; }
 .info-item b { color: var(--ink); font-size: 13px; }
+.order-trade-no { min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.order-detail-actions { flex-wrap: wrap; }
+.order-detail-actions .btn { white-space: nowrap; }
 .telegram-binding-row .btn { flex: 0 0 auto; }
 .telegram-bind-dialog { display: grid; gap: 20px; }
 .telegram-bind-step { padding-bottom: 18px; border-bottom: 1px solid var(--line); }

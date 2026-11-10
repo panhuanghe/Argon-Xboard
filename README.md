@@ -59,11 +59,36 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载安装包 [`Argon-Xboard-1.2.32.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.32/Argon-Xboard-1.2.32.zip)。
+1. 下载 [`Argon-Xboard-1.2.35.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.35/Argon-Xboard-1.2.35.zip)，或从 [GitHub Releases](https://github.com/panhuanghe/Argon-Xboard/releases) 选择其他已发布版本。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色等主题选项；客服群组链接由 Xboard 后台的群组链接统一管控。
 
 > 安装包内部结构为 `Argon-Xboard/...`，符合 Xboard 的主题上传规则。直接把仓库内容按 `Argon-Xboard/` 目录打包同样可用。
+
+### 一键订阅客户端导入
+
+- 点击导入按钮会立即请求浏览器打开对应客户端；首次使用时请允许浏览器打开外部应用。
+- Clash Verge 使用专属 `clash-verge://` 协议，Android Clash Meta 与 Clash for Windows 保留 `clash://`。
+- Surge 在 iOS 使用 `surge:///`，macOS 使用兼容的 `surgeconfig:///`；Sing-box 使用 URL fragment 传递配置名称。
+- 网页无法通过页面隐藏或短时超时可靠判断客户端是否安装，因此不再弹出“未检测到客户端”的自动下载确认。
+- 若未打开，可复制订阅地址手动导入；有有效下载地址的客户端下方提供单独链接。Clash for Windows 的原下载仓库已删除，保留已安装客户端的导入功能。
+- 本地检查：`node --test tests/quick-subscribe.test.cjs`。浏览器检查：安装或使用已有 Playwright 后运行 `node tests/quick-subscribe.browser.cjs`。
+
+### v1.2.34 订单与余额支付修复
+
+- 手机端订单表格在模块内左右滑动，保留六列的完整信息和操作按钮。
+- 余额/免费结算保留 Xboard 返回的完整 `{type, data}` 响应，成功后关闭支付窗口并重新读取仪表盘数据。
+- 接口失败时保留支付窗口及重试按钮，并显示后端错误。
+- 回归检查：`node --test tests/*.test.cjs`；Playwright 浏览器检查：`node tests/orders-mobile.browser.cjs`、`node tests/payment-balance.browser.cjs`。
+
+### v1.2.35 cedar2025/Xboard 兼容检查
+
+- 按 cedar2025/Xboard 的订单状态码展示取消、完成和折抵，已支付金额计入余额抵扣。
+- 支持后端回跳的 `/#/order/{trade_no}` 页面，待支付订单可继续付款，自动查询后端状态。
+- `type:0` 展示支付二维码，`type:1` 跳转支付页面；接口错误和无可用渠道分别处理。
+- Shadowrocket 使用专属订阅格式和 URL safe Base64，Surfboard 使用自带主题的协议格式。
+- 订阅和支付二维码在本地生成，随包附带 qrcode-generator 1.4.4（MIT）。
+- 检查记录见 `docs/xboard-payment-import-audit-2026-11-10.md`；新增浏览器检查：`node tests/xboard-payment.browser.cjs`。
 
 ## 本地预览
 

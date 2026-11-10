@@ -71,7 +71,7 @@
       payment_complete: '完成支付',
       payment_intro: '订单 {trade} 已创建，请选择支付方式。免费订单可直接确认。',
       online_payment: '在线支付',
-      no_online_payment: '当前没有在线支付方式，将尝试使用余额或免费开通。',
+      no_online_payment: '当前没有可用的在线支付方式，请联系管理员。',
       pay_later: '稍后支付',
       confirm_payment: '确认支付',
       processing: '处理中…',
@@ -84,6 +84,14 @@
       resetting: '正在重置…',
       password_reset_done: '密码已重置，请使用新密码登录',
       status_unknown: '未知',
+      status_discounted: '已折抵',
+      order_detail: '订单详情',
+      continue_payment: '继续支付',
+      refresh_order: '刷新订单状态',
+      order_balance_used: '余额抵扣',
+      order_remaining: '待付金额',
+      payment_invalid: '支付接口未返回有效支付结果，请刷新订单状态后重试。',
+      scan_payment: '请使用支付软件扫描二维码，支付后订单状态会自动更新。',
       subscription_plan: '订阅套餐',
       orders_none_title: '还没有订单',
       plan_traffic: '套餐流量',
@@ -170,7 +178,7 @@
       payment_complete: 'Complete payment',
       payment_intro: 'Order {trade} has been created. Please choose a payment method.',
       online_payment: 'Online payment',
-      no_online_payment: 'No online payment methods available. Balance/free checkout will be attempted.',
+      no_online_payment: 'No online payment methods are available. Please contact the administrator.',
       pay_later: 'Pay later',
       confirm_payment: 'Confirm payment',
       processing: 'Processing…',
@@ -183,6 +191,14 @@
       resetting: 'Resetting…',
       password_reset_done: 'Password reset complete. Please sign in with your new password.',
       status_unknown: 'Unknown',
+      status_discounted: 'Credited',
+      order_detail: 'Order details',
+      continue_payment: 'Continue payment',
+      refresh_order: 'Refresh order status',
+      order_balance_used: 'Balance used',
+      order_remaining: 'Amount due',
+      payment_invalid: 'Invalid payment response. Refresh the order status before retrying.',
+      scan_payment: 'Scan with your payment app. The order status will update after payment.',
       subscription_plan: 'Subscription plan',
       orders_none_title: 'No orders yet',
       plan_traffic: 'data',
@@ -256,8 +272,9 @@
     const map = {
       0: [t('status_pending'), 'warning'],
       1: [t('status_processing'), 'warning'],
-      2: [t('status_completed'), 'success'],
-      3: [t('status_cancelled'), 'danger']
+      2: [t('status_cancelled'), 'danger'],
+      3: [t('status_completed'), 'success'],
+      4: [tx('status_discounted'), 'success']
     };
     return map[code] || [tx('status_unknown'), 'warning'];
   }
@@ -266,7 +283,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.32'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.35'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -286,6 +303,7 @@
     loading: false, captchaToken: '', quickSubscribeOS: 'ios', renderId: 0
   };
   let ticketPollTimer = 0;
+  let orderStatusTimer = 0;
 
   applyBrandColor(config.primaryColor);
   setColorMode(localStorage.getItem(themeKey) || 'light');
@@ -502,7 +520,8 @@
       'clash-meta': 'Clash Meta',
       'stash': 'Stash',
       'surge': 'Surge',
-      'surfboard': 'Surfboard'
+      'surfboard': 'Surfboard',
+      'shadowrocket': 'Shadowrocket'
     };
     return map[normalizeTemplateFlag(flag)] || String(flag || '');
   }
@@ -528,24 +547,26 @@
     }
   }
 
-  function buildQuickImportUrl(client, templateUrl) {
+  function buildQuickImportUrl(client, templateUrl, os = state.quickSubscribeOS) {
     const encoded = encodeURIComponent(templateUrl);
     const appName = encodeURIComponent(String(config.brandName || config.title || 'Argon-Xboard'));
     switch (String(client || '').toLowerCase()) {
       case 'shadowrocket':
-        return `shadowrocket://add/sub://${encodeBase64Utf8(templateUrl)}?remark=${appName}`;
+        return `shadowrocket://add/sub://${encodeBase64Utf8(templateUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}?remark=${appName}`;
       case 'surge':
-        return `surge://install-config?url=${encoded}&name=${appName}`;
+        return `${String(os || '').toLowerCase() === 'macos' ? 'surgeconfig' : 'surge'}:///install-config?url=${encoded}&name=${appName}`;
       case 'stash':
         return `stash://install-config?url=${encoded}&name=${appName}`;
       case 'clash':
       case 'clash-meta':
         return `clash://install-config?url=${encoded}&name=${appName}`;
+      case 'clash-verge':
+        return `clash-verge://install-config?url=${encoded}&name=${appName}`;
       case 'sing-box':
       case 'singbox':
-        return `sing-box://import-remote-profile?url=${encoded}&name=${appName}`;
+        return `sing-box://import-remote-profile?url=${encoded}#${appName}`;
       case 'surfboard':
-        return `surfboard://install-config?url=${encoded}&name=${appName}`;
+        return `surfboard:///install-config?url=${encoded}&name=${appName}`;
       default:
         return '';
     }
@@ -555,7 +576,7 @@
     const current = String(os || 'ios').toLowerCase();
     const groups = {
       ios: [
-        { client: 'shadowrocket', label: '导入到 Shadowrocket', flag: 'surge' },
+        { client: 'shadowrocket', label: '导入到 Shadowrocket', flag: 'shadowrocket' },
         { client: 'surge', label: '导入到 Surge', flag: 'surge' },
         { client: 'stash', label: '导入到 Stash', flag: 'stash' }
       ],
@@ -565,12 +586,12 @@
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ],
       macos: [
-        { client: 'clash-meta', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'clash-verge', label: '导入到 Clash Verge', flag: 'clash-meta' },
         { client: 'surge', label: '导入到 Surge', flag: 'surge' },
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ],
       windows: [
-        { client: 'clash-meta', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'clash-verge', label: '导入到 Clash Verge', flag: 'clash-meta' },
         { client: 'clash', label: '导入到 Clash for Windows', flag: 'clash' },
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ]
@@ -594,7 +615,11 @@
         <button class="quick-action-btn" type="button" data-action="show-sub-qr">${icon('dashboard')}<span>扫描二维码订阅</span></button>
       </div>
       <div class="quick-subscribe-tabs">${osList.map(os => `<button type="button" class="quick-tab ${currentOS === os ? 'active' : ''}" data-action="set-quick-os" data-os="${os}">${os.toUpperCase()}</button>`).join('')}</div>
-      <div class="quick-client-list">${clients.map(item => `<button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${e(templateLabel(item.flag))} 模板</small></button>`).join('')}</div>
+      <div class="quick-client-list">${clients.map(item => {
+        const download = getQuickClientDownloadLink(item.client, currentOS);
+        return `<div class="quick-client-entry"><button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${e(templateLabel(item.flag))} 模板</small></button>${download ? `<a class="text-link" href="${e(download)}" target="_blank" rel="noopener noreferrer" aria-label="${e(item.label.replace('导入到 ', '下载 '))}">下载客户端</a>` : ''}</div>`;
+      }).join('')}</div>
+      <p class="field-hint">请允许浏览器打开客户端。若未打开，可复制订阅地址手动导入。</p>
     </section>`;
   }
 
@@ -605,48 +630,23 @@
       shadowrocket: 'https://apps.apple.com/app/shadowrocket/id932747118',
       surge: currentOS === 'ios' ? 'https://apps.apple.com/app/surge-5/id1442620678' : 'https://nssurge.com/',
       stash: 'https://stash.wiki/',
-      'clash-meta': currentOS === 'android'
-        ? 'https://github.com/MetaCubeX/ClashMetaForAndroid/releases'
-        : 'https://github.com/clash-verge-rev/clash-verge-rev/releases',
-      clash: 'https://github.com/Fndroid/clash_for_windows_pkg/releases',
+      'clash-meta': 'https://github.com/MetaCubeX/ClashMetaForAndroid/releases',
+      'clash-verge': 'https://github.com/clash-verge-rev/clash-verge-rev/releases',
+      clash: '',
       'sing-box': 'https://sing-box.sagernet.org/clients/',
       singbox: 'https://sing-box.sagernet.org/clients/',
-      surfboard: 'https://apkpure.com/surfboard/com.getsurfboard'
+      surfboard: 'https://getsurfboard.com/'
     };
     return links[name] || '';
   }
 
-  function waitClientLaunch(timeoutMs = 1500) {
-    return new Promise(resolve => {
-      let finished = false;
-      const cleanup = () => {
-        clearTimeout(timer);
-        document.removeEventListener('visibilitychange', onVisibilityChange, true);
-        window.removeEventListener('pagehide', onHidden, true);
-        window.removeEventListener('blur', onBlur, true);
-      };
-      const done = launched => {
-        if (finished) return;
-        finished = true;
-        cleanup();
-        resolve(Boolean(launched));
-      };
-      const onHidden = () => done(true);
-      const onVisibilityChange = () => {
-        if (document.visibilityState === 'hidden' || document.hidden) done(true);
-      };
-      const onBlur = () => setTimeout(() => {
-        if (document.visibilityState === 'hidden' || document.hidden) done(true);
-      }, 80);
-      const timer = setTimeout(() => done(document.visibilityState === 'hidden' || document.hidden), timeoutMs);
-      if (document.visibilityState === 'hidden' || document.hidden) {
-        done(true);
-        return;
-      }
-      document.addEventListener('visibilitychange', onVisibilityChange, true);
-      window.addEventListener('pagehide', onHidden, true);
-      window.addEventListener('blur', onBlur, true);
-    });
+  function qrCodeSvg(value) {
+    if (typeof window.qrcode !== 'function') throw new Error(t('operation_failed'));
+    window.qrcode.stringToBytes = window.qrcode.stringToBytesFuncs['UTF-8'];
+    const code = window.qrcode(0, 'M');
+    code.addData(String(value));
+    code.make();
+    return code.createSvgTag({ scalable: true, cellSize: 4 });
   }
 
   function openSubscribeQr(subscribeUrl) {
@@ -656,8 +656,9 @@
       return;
     }
     const dialog = document.getElementById('global-dialog');
-    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(safe)}`;
-    dialog.innerHTML = `<div class="dialog-head"><div><h3>扫码订阅</h3><small>使用客户端扫码导入订阅</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body quick-qr-body"><img class="quick-qr-image" src="${e(qrSrc)}" alt="QR"><p class="quick-qr-link">${renderLink(safe, safe)}</p></div>`;
+    let svg;
+    try { svg = qrCodeSvg(safe); } catch (error) { toast(error.message, 'error'); return; }
+    dialog.innerHTML = `<div class="dialog-head"><div><h3>扫码订阅</h3><small>使用客户端扫码导入订阅</small></div><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body quick-qr-body"><div class="quick-qr-code" role="img" aria-label="订阅二维码">${svg}</div><p class="quick-qr-link">${renderLink(safe, safe)}</p></div>`;
     dialog.showModal();
   }
 
@@ -693,7 +694,7 @@
     }
   }
 
-  async function openQuickClientImport(client, flag) {
+  function openQuickClientImport(client, flag) {
     const subscribeUrl = safeHttpUrl(state.subscribe?.subscribe_url || '');
     if (!subscribeUrl) {
       toast(t('no_subscribe_url'), 'error');
@@ -702,17 +703,9 @@
     const templateUrl = buildTemplateSubscribeUrl(subscribeUrl, flag);
     const importUrl = buildQuickImportUrl(client, templateUrl);
     if (importUrl) {
-      const launchProbe = waitClientLaunch();
+      // Browser visibility cannot tell whether a native protocol handler is installed.
+      toast('请在浏览器提示中允许打开客户端；若未打开，可复制订阅地址手动导入，或点击“下载客户端”。', 'info', '正在请求打开客户端');
       window.location.href = importUrl;
-      const launched = await launchProbe;
-      if (launched) return;
-      const download = getQuickClientDownloadLink(client, state.quickSubscribeOS);
-      if (download) {
-        const goInstall = window.confirm('未检测到对应客户端，是否前往下载页面安装？');
-        if (goInstall) window.open(download, '_blank', 'noopener');
-      } else {
-        toast('未检测到客户端，请先安装对应客户端。', 'warning');
-      }
     } else {
       window.open(templateUrl, '_blank', 'noopener');
     }
@@ -783,9 +776,11 @@
     }
     if (!response.ok || result.status === 'fail') {
       const message = result.message || result.error || t('request_failed');
-      throw new Error(Array.isArray(message) ? message.join('，') : message);
+      const error = new Error(Array.isArray(message) ? message.join('，') : message);
+      error.status = response.status;
+      throw error;
     }
-    return Object.prototype.hasOwnProperty.call(result, 'data') ? result.data : result;
+    return !options.rawResponse && Object.prototype.hasOwnProperty.call(result, 'data') ? result.data : result;
   }
 
   function mockApi(path, options) {
@@ -812,7 +807,9 @@
       : path.includes('/getSubscribe') ? { plan_id: 2, u: 23 * 1024 ** 3, d: 172 * 1024 ** 3, transfer_enable: 500 * 1024 ** 3, expired_at: now + 86400 * 126, subscribe_url: 'https://example.com/s/nebula-preview', plan: plans[1], device_limit: 8, speed_limit: null, reset_day: 12 }
       : path.includes('/plan/fetch') ? plans
       : path.includes('/notice/fetch') ? [{ id: 1, title: '欢迎使用 Argon-Xboard', content: '全新用户中心已经准备就绪。你可以在订阅中心复制链接，或前往套餐页面续费。', created_at: now }]
-      : path.includes('/order/fetch') ? [{ trade_no: '202606210001', status: 2, total_amount: 2600, period: 'month_price', created_at: now - 86400 * 4, plan: plans[1] }]
+      : path.includes('/order/detail') ? { trade_no: new URLSearchParams(path.split('?')[1]).get('trade_no'), status: 0, total_amount: 2600, balance_amount: 0, period: 'month_price', created_at: now, plan: plans[1] }
+      : path.includes('/order/check') ? 3
+      : path.includes('/order/fetch') ? [{ trade_no: '202606210001', status: 3, total_amount: 2600, period: 'month_price', created_at: now - 86400 * 4, plan: plans[1] }]
       : path.includes('/order/save') ? 'PREVIEW-ORDER-001'
       : path.includes('/getPaymentMethod') ? [{ id: 1, name: '演示支付', payment: 'demo' }]
       : path.includes('/order/checkout') ? { type: -1, data: true }
@@ -1641,22 +1638,96 @@
       const orders = await api('/user/order/fetch');
       if (id !== state.renderId) return;
       state.orders = Array.isArray(orders) ? orders : [];
-      const totalPaid = state.orders.filter(o => Number(o.status) === 2).reduce((s, o) => s + Number(o.total_amount || 0), 0);
+      const totalPaid = state.orders.filter(o => [3, 4].includes(Number(o.status))).reduce((s, o) => s + Number(o.total_amount || 0) + Number(o.balance_amount || 0) + Number(o.handling_amount || 0), 0);
       const pendingCount = state.orders.filter(o => Number(o.status) === 0).length;
       const rows = state.orders.map(order => {
         const status = orderStatusLabel(order.status);
-        return `<tr><td><strong>${e(order.plan?.name || tx('subscription_plan'))}</strong><br><small>${e(order.trade_no || '')}</small></td><td>${e(periodLabel(order.period))}</td><td>${money(order.total_amount)}</td><td>${date(order.created_at)}</td><td><span class="status ${status[1]}">${status[0]}</span></td><td>${Number(order.status) === 0 ? `<button class="btn btn-ghost btn-sm" data-action="cancel-order" data-trade="${e(order.trade_no)}">${t('cancel')}</button>` : '—'}</td></tr>`;
+        return `<tr><td><a class="table-link" href="#/order/${e(encodeURIComponent(order.trade_no || ''))}"><strong>${e(order.plan?.name || tx('subscription_plan'))}</strong><br><small>${e(order.trade_no || '')}</small></a></td><td>${e(periodLabel(order.period))}</td><td>${money(Number(order.total_amount || 0) + Number(order.balance_amount || 0))}</td><td>${date(order.created_at)}</td><td><span class="status ${status[1]}">${status[0]}</span></td><td>${Number(order.status) === 0 ? `<a class="btn btn-ghost btn-sm" href="#/order/${e(encodeURIComponent(order.trade_no || ''))}">${tx('continue_payment')}</a><button class="btn btn-ghost btn-sm" data-action="cancel-order" data-trade="${e(order.trade_no)}">${t('cancel')}</button>` : '—'}</td></tr>`;
       }).join('');
       const content = `${pageHead(t('nav_orders'), t('nav_orders'), tx('orders_subtitle'), `<a class="btn btn-ticket-cta" href="#/plans">${icon('plans')}<span>${t('buy_plan')}</span></a>`)}
         <div class="grid grid-4" style="margin-bottom:24px">
           ${statCard('orders', state.orders.length, t('total_orders'), 'bg-gradient-info')}
           ${statCard('wallet', money(totalPaid), t('paid_amount'), 'bg-gradient-success')}
           ${statCard('calendar', pendingCount, t('pending_orders'), 'bg-gradient-warning')}
-          ${statCard('chart', state.orders.filter(o => Number(o.status) === 2).length, t('completed_orders'), 'bg-gradient-primary')}
+          ${statCard('chart', state.orders.filter(o => Number(o.status) === 3).length, t('completed_orders'), 'bg-gradient-primary')}
         </div>
-        <section class="card">${rows ? `<div class="table-wrap"><table class="table"><thead><tr><th>${t('order')}</th><th>${t('period')}</th><th>${t('amount')}</th><th>${t('create_time')}</th><th>${t('status')}</th><th>${t('action')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty(tx('orders_none_title'), t('orders_empty'))}</section>`;
+        <section class="card">${rows ? `<div class="table-wrap"><table class="table orders-table"><thead><tr><th>${t('order')}</th><th>${t('period')}</th><th>${t('amount')}</th><th>${t('create_time')}</th><th>${t('status')}</th><th>${t('action')}</th></tr></thead><tbody>${rows}</tbody></table></div>` : empty(tx('orders_none_title'), t('orders_empty'))}</section>`;
       app.innerHTML = shell(content, t('nav_orders'));
     } catch (error) { renderError(error); }
+  }
+
+  function checkOrderStatus(tradeNo, expectedStatus, id, retries = 0) {
+    clearTimeout(orderStatusTimer);
+    orderStatusTimer = setTimeout(async () => {
+      if (id !== state.renderId || !state.auth) return;
+      try {
+        const status = await api(`/user/order/check?trade_no=${encodeURIComponent(tradeNo)}`);
+        if (id !== state.renderId) return;
+        if (![0, 1, 2, 3, 4].includes(Number(status))) {
+          toast(tx('payment_invalid'), 'error');
+          return;
+        }
+        if (Number(status) !== Number(expectedStatus)) {
+          render();
+        } else {
+          checkOrderStatus(tradeNo, expectedStatus, id);
+        }
+      } catch (error) {
+        if (id !== state.renderId || !state.auth) return;
+        const temporary = !error.status || error.status >= 500 || error.status === 429;
+        if (temporary && retries < 3) {
+          checkOrderStatus(tradeNo, expectedStatus, id, retries + 1);
+        } else {
+          toast(error.message, 'error');
+        }
+      }
+    }, 1500);
+  }
+
+  async function renderOrderDetail(id) {
+    const rawTrade = location.hash.replace(/^#\/?order\//, '').split('?')[0];
+    let tradeNo;
+    try { tradeNo = decodeURIComponent(rawTrade); } catch (_) { return renderError(new Error(tx('payment_invalid'))); }
+    if (!tradeNo) return go('orders');
+    app.innerHTML = shell(`${pageHead(tx('order_detail'), tx('order_detail'), '')}<div class="card skeleton"></div>`, t('nav_orders'));
+    try {
+      const order = await api(`/user/order/detail?trade_no=${encodeURIComponent(tradeNo)}`);
+      if (id !== state.renderId) return;
+      const status = orderStatusLabel(order.status);
+      const content = `${pageHead(tx('order_detail'), tx('order_detail'), '', `<a class="btn btn-secondary" href="#/orders">${t('nav_orders')}</a>`)}
+        <section class="card card-pad" data-order-detail>
+          <div class="card-title"><h2>${e(order.plan?.name || tx('subscription_plan'))}</h2><span class="status ${status[1]}">${status[0]}</span></div>
+          <div class="info-list">
+            <div class="info-item"><span>${t('order')}</span><b class="order-trade-no">${e(tradeNo)}</b></div>
+            <div class="info-item"><span>${t('period')}</span><b>${e(periodLabel(order.period))}</b></div>
+            <div class="info-item"><span>${tx('order_balance_used')}</span><b>${money(order.balance_amount)}</b></div>
+            <div class="info-item"><span>${Number(order.status) === 0 ? tx('order_remaining') : t('amount')}</span><b>${money(Number(order.total_amount || 0) + (Number(order.status) === 0 ? 0 : Number(order.balance_amount || 0)))}</b></div>
+          </div>
+          <div class="dialog-actions order-detail-actions">${Number(order.status) === 0 ? `<button class="btn btn-primary" data-action="pay-order" data-trade="${e(tradeNo)}">${tx('continue_payment')}</button>` : ''}<button class="btn btn-secondary" data-action="refresh-order">${tx('refresh_order')}</button><a class="btn btn-secondary" href="#/dashboard">${t('nav_dashboard')}</a></div>
+        </section>`;
+      app.innerHTML = shell(content, t('nav_orders'));
+      if ([0, 1].includes(Number(order.status))) checkOrderStatus(tradeNo, order.status, id);
+    } catch (error) { if (id === state.renderId) renderError(error); }
+  }
+
+  async function openOrderPayment(tradeNo) {
+    const id = state.renderId;
+    try {
+      const order = await api(`/user/order/detail?trade_no=${encodeURIComponent(tradeNo)}`);
+      if (id !== state.renderId) return;
+      if (Number(order.status) !== 0) return render();
+      const methods = Number(order.total_amount) === 0 ? [] : await api('/user/order/getPaymentMethod');
+      if (id !== state.renderId) return;
+      renderPayments(tradeNo, Array.isArray(methods) ? methods : [], order);
+    } catch (error) { if (id === state.renderId) toast(error.message, 'error'); }
+  }
+
+  function openPaymentQr(tradeNo, value) {
+    const svg = qrCodeSvg(value);
+    const dialog = document.getElementById('global-dialog');
+    dialog.innerHTML = `<div class="dialog-head"><h3>${tx('payment_waiting_title')}</h3><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><div class="dialog-body quick-qr-body"><div class="quick-qr-code" role="img" aria-label="${tx('payment_waiting_title')}">${svg}</div><p class="field-hint">${tx('scan_payment')}</p><button class="btn btn-secondary" data-action="refresh-order">${tx('refresh_order')}</button></div>`;
+    if (!dialog.open) dialog.showModal();
+    checkOrderStatus(tradeNo, 0, state.renderId);
   }
 
   function docsHeader() {
@@ -2011,31 +2082,43 @@
     try {
       const data = new FormData(form);
       const tradeNo = await api('/user/order/save', { method: 'POST', body: { plan_id: form.dataset.plan, period: data.get('period'), coupon_code: data.get('coupon_code') || undefined } });
-      const methods = await api('/user/order/getPaymentMethod').catch(() => []);
-      renderPayments(tradeNo, methods || []);
+      go(`order/${encodeURIComponent(tradeNo)}`);
     } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = tx('create_order'); }
   }
 
-  function renderPayments(tradeNo, methods) {
+  function renderPayments(tradeNo, methods, order) {
     const dialog = document.getElementById('global-dialog');
-    dialog.innerHTML = `<div class="dialog-head"><h3>${tx('payment_complete')}</h3><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><form class="dialog-body" id="payment-form" data-trade="${e(tradeNo)}"><p class="field-hint" style="margin-top:0">${fmt(tx('payment_intro'), { trade: e(tradeNo) })}</p><div class="payment-list">${methods.length ? methods.map((method, i) => `<label class="choice"><input type="radio" name="method" value="${e(method.id)}" ${i === 0 ? 'checked' : ''}><span><b>${e(method.name)}</b><small>${e(method.payment || tx('online_payment'))}</small></span></label>`).join('') : `<p class="field-hint">${tx('no_online_payment')}</p>`}</div><div class="dialog-actions"><button class="btn btn-secondary" type="button" data-action="close-dialog">${tx('pay_later')}</button><button class="btn btn-primary" type="submit">${tx('confirm_payment')}</button></div></form>`;
+    const balanceCheckout = Number(order.total_amount) === 0;
+    const canPay = balanceCheckout || methods.length > 0;
+    dialog.innerHTML = `<div class="dialog-head"><h3>${tx('payment_complete')}</h3><button class="icon-btn" data-action="close-dialog">${icon('close')}</button></div><form class="dialog-body" id="payment-form" data-trade="${e(tradeNo)}"><p class="field-hint" style="margin-top:0">${fmt(tx('payment_intro'), { trade: e(tradeNo) })}</p><p>${tx('order_balance_used')}: ${money(order.balance_amount)} · ${tx('order_remaining')}: ${money(order.total_amount)}</p><div class="payment-list">${balanceCheckout ? '' : methods.length ? methods.map((method, i) => `<label class="choice"><input type="radio" name="method" value="${e(method.id)}" ${i === 0 ? 'checked' : ''}><span><b>${e(method.name)}</b><small>${e(method.payment || tx('online_payment'))}</small></span></label>`).join('') : `<p class="field-hint">${tx('no_online_payment')}</p>`}</div><div class="dialog-actions"><button class="btn btn-secondary" type="button" data-action="close-dialog">${tx('pay_later')}</button><button class="btn btn-primary" type="submit" ${canPay ? '' : 'disabled'}>${tx('confirm_payment')}</button></div></form>`;
+    if (!dialog.open) dialog.showModal();
   }
 
   async function checkout(form) {
-    const button = form.querySelector('[type="submit"]'); button.disabled = true; button.textContent = tx('processing');
+    const button = form.querySelector('[type="submit"]');
+    if (button.disabled) return;
+    const id = state.renderId;
+    const isCurrentPayment = () => id === state.renderId && state.auth
+      && document.getElementById('payment-form') === form && document.getElementById('global-dialog').open;
+    button.disabled = true; button.textContent = tx('processing');
     try {
       const data = new FormData(form);
-      const result = await api('/user/order/checkout', { method: 'POST', body: { trade_no: form.dataset.trade, method: data.get('method') || 0 } });
-      if (result.type === -1 || result.data === true) {
+      const result = await api('/user/order/checkout', { method: 'POST', rawResponse: true, body: { trade_no: form.dataset.trade, method: data.get('method') || 0 } });
+      if (!isCurrentPayment()) return;
+      if (result.data === true) {
         document.getElementById('global-dialog').close(); toast(tx('plan_activated')); go('dashboard');
-      } else if (typeof result.data === 'string' && /^https?:\/\//i.test(result.data)) {
-        location.href = result.data;
+      } else if (Number(result.type) === 0 && typeof result.data === 'string' && result.data) {
+        openPaymentQr(form.dataset.trade, result.data);
+      } else if (Number(result.type) === 1 && safeHttpUrl(result.data)) {
+        location.href = safeHttpUrl(result.data);
       } else {
         button.disabled = false; button.textContent = tx('confirm_payment');
-        toast(tx('payment_waiting_desc'), 'success', tx('payment_waiting_title'));
-        if (typeof result.data === 'string') window.open(result.data, '_blank', 'noopener');
+        toast(tx('payment_invalid'), 'error');
       }
-    } catch (error) { toast(error.message, 'error'); button.disabled = false; button.textContent = tx('confirm_payment'); }
+    } catch (error) {
+      if (!isCurrentPayment()) return;
+      toast(error.message, 'error'); button.disabled = false; button.textContent = tx('confirm_payment');
+    }
   }
 
   async function handleAuth(form) {
@@ -2080,6 +2163,7 @@
 
   async function render() {
     const id = ++state.renderId;
+    clearTimeout(orderStatusTimer);
     closeMobileMenu();
     const dialog = document.getElementById('global-dialog');
     if (dialog?.open) dialog.close();
@@ -2092,6 +2176,7 @@
     if (route === 'docs') return renderDocs(id);
     if (route === 'plans') return renderPlans(id);
     if (route === 'orders') return renderOrders(id);
+    if (route === 'order') return renderOrderDetail(id);
     if (route === 'invites') return renderInvites(id);
     if (route === 'nodes') return renderNodes(id);
     if (route === 'tickets') return renderTickets(id);
@@ -2163,6 +2248,12 @@
     } else if (action === 'reset-subscribe') {
       if (!confirm(t('reset_confirm'))) return;
       try { await api('/user/resetSecurity', { method: 'POST' }); toast(t('reset_done')); render(); } catch (error) { toast(error.message, 'error'); }
+    } else if (action === 'pay-order') {
+      target.disabled = true;
+      await openOrderPayment(target.dataset.trade);
+      target.disabled = false;
+    } else if (action === 'refresh-order') {
+      render();
     } else if (action === 'copy-invite') {
       try { await navigator.clipboard.writeText(target.dataset.link || ''); toast(t('copy_invite_url')); } catch { toast(t('copy_failed'), 'error'); }
     } else if (action === 'open-doc') openDoc(target.dataset.id);
