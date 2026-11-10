@@ -87,6 +87,7 @@
       status_discounted: '已折抵',
       order_detail: '订单详情',
       continue_payment: '继续支付',
+      cancel_payment: '取消支付',
       refresh_order: '刷新订单状态',
       order_balance_used: '余额抵扣',
       order_remaining: '待付金额',
@@ -194,6 +195,7 @@
       status_discounted: 'Credited',
       order_detail: 'Order details',
       continue_payment: 'Continue payment',
+      cancel_payment: 'Cancel payment',
       refresh_order: 'Refresh order status',
       order_balance_used: 'Balance used',
       order_remaining: 'Amount due',
@@ -283,7 +285,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.35'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.36'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -304,6 +306,7 @@
   };
   let ticketPollTimer = 0;
   let orderStatusTimer = 0;
+  const orderActionsInFlight = new Set();
 
   applyBrandColor(config.primaryColor);
   setColorMode(localStorage.getItem(themeKey) || 'light');
@@ -559,9 +562,8 @@
         return `stash://install-config?url=${encoded}&name=${appName}`;
       case 'clash':
       case 'clash-meta':
-        return `clash://install-config?url=${encoded}&name=${appName}`;
       case 'clash-verge':
-        return `clash-verge://install-config?url=${encoded}&name=${appName}`;
+        return `clash://install-config?url=${encoded}&name=${appName}`;
       case 'sing-box':
       case 'singbox':
         return `sing-box://import-remote-profile?url=${encoded}#${appName}`;
@@ -586,12 +588,12 @@
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ],
       macos: [
-        { client: 'clash-verge', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'clash-verge', label: '导入到 Clash Verge', flag: '' },
         { client: 'surge', label: '导入到 Surge', flag: 'surge' },
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ],
       windows: [
-        { client: 'clash-verge', label: '导入到 Clash Verge', flag: 'clash-meta' },
+        { client: 'clash-verge', label: '导入到 Clash Verge', flag: '' },
         { client: 'clash', label: '导入到 Clash for Windows', flag: 'clash' },
         { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
       ]
@@ -617,7 +619,7 @@
       <div class="quick-subscribe-tabs">${osList.map(os => `<button type="button" class="quick-tab ${currentOS === os ? 'active' : ''}" data-action="set-quick-os" data-os="${os}">${os.toUpperCase()}</button>`).join('')}</div>
       <div class="quick-client-list">${clients.map(item => {
         const download = getQuickClientDownloadLink(item.client, currentOS);
-        return `<div class="quick-client-entry"><button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${e(templateLabel(item.flag))} 模板</small></button>${download ? `<a class="text-link" href="${e(download)}" target="_blank" rel="noopener noreferrer" aria-label="${e(item.label.replace('导入到 ', '下载 '))}">下载客户端</a>` : ''}</div>`;
+        return `<div class="quick-client-entry"><button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${item.flag ? `${e(templateLabel(item.flag))} 模板` : '客户端自动识别'}</small></button>${download ? `<a class="text-link" href="${e(download)}" target="_blank" rel="noopener noreferrer" aria-label="${e(item.label.replace('导入到 ', '下载 '))}">下载客户端</a>` : ''}</div>`;
       }).join('')}</div>
       <p class="field-hint">请允许浏览器打开客户端。若未打开，可复制订阅地址手动导入。</p>
     </section>`;
@@ -1703,14 +1705,25 @@
             <div class="info-item"><span>${tx('order_balance_used')}</span><b>${money(order.balance_amount)}</b></div>
             <div class="info-item"><span>${Number(order.status) === 0 ? tx('order_remaining') : t('amount')}</span><b>${money(Number(order.total_amount || 0) + (Number(order.status) === 0 ? 0 : Number(order.balance_amount || 0)))}</b></div>
           </div>
-          <div class="dialog-actions order-detail-actions">${Number(order.status) === 0 ? `<button class="btn btn-primary" data-action="pay-order" data-trade="${e(tradeNo)}">${tx('continue_payment')}</button>` : ''}<button class="btn btn-secondary" data-action="refresh-order">${tx('refresh_order')}</button><a class="btn btn-secondary" href="#/dashboard">${t('nav_dashboard')}</a></div>
+          <div class="dialog-actions order-detail-actions">${Number(order.status) === 0 ? `<button class="btn btn-primary" data-action="pay-order" data-trade="${e(tradeNo)}">${tx('continue_payment')}</button><button class="btn btn-danger" data-action="cancel-order" data-trade="${e(tradeNo)}">${tx('cancel_payment')}</button>` : ''}<button class="btn btn-secondary" data-action="refresh-order">${tx('refresh_order')}</button><a class="btn btn-secondary" href="#/dashboard">${t('nav_dashboard')}</a></div>
         </section>`;
       app.innerHTML = shell(content, t('nav_orders'));
       if ([0, 1].includes(Number(order.status))) checkOrderStatus(tradeNo, order.status, id);
     } catch (error) { if (id === state.renderId) renderError(error); }
   }
 
+  function setOrderActionBusy(tradeNo, busy) {
+    if (busy && orderActionsInFlight.has(tradeNo)) return false;
+    if (busy) orderActionsInFlight.add(tradeNo);
+    else orderActionsInFlight.delete(tradeNo);
+    document.querySelectorAll('[data-action="pay-order"], [data-action="cancel-order"]').forEach(button => {
+      if (button.dataset.trade === tradeNo) button.disabled = busy;
+    });
+    return true;
+  }
+
   async function openOrderPayment(tradeNo) {
+    if (!setOrderActionBusy(tradeNo, true)) return;
     const id = state.renderId;
     try {
       const order = await api(`/user/order/detail?trade_no=${encodeURIComponent(tradeNo)}`);
@@ -1720,6 +1733,27 @@
       if (id !== state.renderId) return;
       renderPayments(tradeNo, Array.isArray(methods) ? methods : [], order);
     } catch (error) { if (id === state.renderId) toast(error.message, 'error'); }
+    finally { setOrderActionBusy(tradeNo, false); }
+  }
+
+  async function cancelOrder(button) {
+    if (button.disabled) return;
+    const tradeNo = button.dataset.trade;
+    if (!setOrderActionBusy(tradeNo, true)) return;
+    const id = state.renderId;
+    button.disabled = true;
+    try {
+      const cancelled = await api('/user/order/cancel', { method: 'POST', body: { trade_no: tradeNo } });
+      if (cancelled !== true) throw new Error(t('request_failed'));
+      if (id !== state.renderId || !state.auth) return;
+      toast(tx('order_cancelled'));
+      render();
+    } catch (error) {
+      if (id === state.renderId && state.auth) toast(error.message, 'error');
+    } finally {
+      setOrderActionBusy(tradeNo, false);
+      button.disabled = false;
+    }
   }
 
   function openPaymentQr(tradeNo, value) {
@@ -2097,6 +2131,8 @@
   async function checkout(form) {
     const button = form.querySelector('[type="submit"]');
     if (button.disabled) return;
+    const tradeNo = form.dataset.trade;
+    if (!setOrderActionBusy(tradeNo, true)) return;
     const id = state.renderId;
     const isCurrentPayment = () => id === state.renderId && state.auth
       && document.getElementById('payment-form') === form && document.getElementById('global-dialog').open;
@@ -2119,6 +2155,7 @@
       if (!isCurrentPayment()) return;
       toast(error.message, 'error'); button.disabled = false; button.textContent = tx('confirm_payment');
     }
+    finally { setOrderActionBusy(tradeNo, false); }
   }
 
   async function handleAuth(form) {
@@ -2249,9 +2286,7 @@
       if (!confirm(t('reset_confirm'))) return;
       try { await api('/user/resetSecurity', { method: 'POST' }); toast(t('reset_done')); render(); } catch (error) { toast(error.message, 'error'); }
     } else if (action === 'pay-order') {
-      target.disabled = true;
       await openOrderPayment(target.dataset.trade);
-      target.disabled = false;
     } else if (action === 'refresh-order') {
       render();
     } else if (action === 'copy-invite') {
@@ -2281,7 +2316,7 @@
     else if (action === 'reload') render();
     else if (action === 'send-code') sendEmailCode(target);
     else if (action === 'cancel-order') {
-      try { await api('/user/order/cancel', { method: 'POST', body: { trade_no: target.dataset.trade } }); toast(tx('order_cancelled')); render(); } catch (error) { toast(error.message, 'error'); }
+      await cancelOrder(target);
     } else if (action === 'go-notices') {
       openNoticeCenter();
     } else if (action === 'toggle-notify') {

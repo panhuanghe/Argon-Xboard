@@ -8,8 +8,8 @@ const output = path.resolve(process.argv[2] || path.join(__dirname, '../../valid
 const expected = {
   ios: ['shadowrocket://add/sub://', 'surge:///install-config', 'stash://install-config'],
   android: ['clash://install-config', 'surfboard:///install-config', 'sing-box://import-remote-profile'],
-  macos: ['clash-verge://install-config', 'surgeconfig:///install-config', 'sing-box://import-remote-profile'],
-  windows: ['clash-verge://install-config', 'clash://install-config', 'sing-box://import-remote-profile']
+  macos: ['clash://install-config', 'surgeconfig:///install-config', 'sing-box://import-remote-profile'],
+  windows: ['clash://install-config', 'clash://install-config', 'sing-box://import-remote-profile']
 };
 
 (async () => {
@@ -48,6 +48,12 @@ const expected = {
         assert.equal(requests.length, requestCount + 1, `${os}: ${label} must request a native navigation`);
         const uri = requests.at(-1);
         assert.ok(uri.startsWith(prefixes[index]), `${os}: ${uri}`);
+        if (await button.getAttribute('data-client') === 'clash-verge') {
+          const original = 'https://example.com/s/nebula-preview';
+          assert.equal(uri, `clash://install-config?url=${encodeURIComponent(original)}&name=Argon-Xboard`);
+          assert.equal(new URL(uri).searchParams.get('url'), original);
+          assert.equal(await button.locator('small').innerText(), '客户端自动识别');
+        }
         assert.equal(dialogs.length, 0, 'do not interrupt browser/client opening with a guessed failure');
         assert.equal(new URL(page.url()).protocol, 'file:', 'import does not replace the dashboard');
         assert.ok((await page.locator('.toast-stack').innerText()).includes('允许打开客户端'));

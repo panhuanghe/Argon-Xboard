@@ -59,7 +59,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载 [`Argon-Xboard-1.2.35.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.35/Argon-Xboard-1.2.35.zip)，或从 [GitHub Releases](https://github.com/panhuanghe/Argon-Xboard/releases) 选择其他已发布版本。
+1. 下载 [`Argon-Xboard-1.2.36.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.36/Argon-Xboard-1.2.36.zip)，或从 [GitHub Releases](https://github.com/panhuanghe/Argon-Xboard/releases) 选择其他已发布版本。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色等主题选项；客服群组链接由 Xboard 后台的群组链接统一管控。
 
@@ -68,7 +68,7 @@ Argon-Xboard/
 ### 一键订阅客户端导入
 
 - 点击导入按钮会立即请求浏览器打开对应客户端；首次使用时请允许浏览器打开外部应用。
-- Clash Verge 使用专属 `clash-verge://` 协议，Android Clash Meta 与 Clash for Windows 保留 `clash://`。
+- Clash Verge 与 Xboard 原生主题一致，使用 `clash://` 和后台原始订阅链接，由客户端请求时识别格式；Android Clash Meta 与 Clash for Windows 也使用 `clash://`。
 - Surge 在 iOS 使用 `surge:///`，macOS 使用兼容的 `surgeconfig:///`；Sing-box 使用 URL fragment 传递配置名称。
 - 网页无法通过页面隐藏或短时超时可靠判断客户端是否安装，因此不再弹出“未检测到客户端”的自动下载确认。
 - 若未打开，可复制订阅地址手动导入；有有效下载地址的客户端下方提供单独链接。Clash for Windows 的原下载仓库已删除，保留已安装客户端的导入功能。
@@ -89,6 +89,14 @@ Argon-Xboard/
 - Shadowrocket 使用专属订阅格式和 URL safe Base64，Surfboard 使用自带主题的协议格式。
 - 订阅和支付二维码在本地生成，随包附带 qrcode-generator 1.4.4（MIT）。
 - 检查记录见 `docs/xboard-payment-import-audit-2026-11-10.md`；新增浏览器检查：`node tests/xboard-payment.browser.cjs`。
+
+### v1.2.36 原生导入格式与取消支付
+
+- 按用户实测可用的 Xboard 原生主题生成 `clash://install-config?url=...&name=...`，使用后台原始链接，不额外添加 `flag=clash-meta`。
+- 保留原生格式中正常的 `name` 参数；增加原生链接逐字比对和客户端解析后的本地请求验证。本次尚未验证用户设备上的实际导入。
+- 待支付订单详情增加“取消支付”，复用后台取消订单接口；后台取消成功后更新状态，已抵扣余额由后台退回。
+- 检查记录见 `docs/clash-verge-import-fix-2026-11-10.md`。
+- 取消支付浏览器检查：`node tests/order-cancel.browser.cjs`，覆盖桌面/手机布局、成功/失败以及各状态的按钮显示。
 
 ## 本地预览
 

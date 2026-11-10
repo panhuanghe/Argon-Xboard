@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../assets/theme.js'), 'utf8');
 const apiSource = source.slice(source.indexOf('  async function api('), source.indexOf('  function mockApi('));
 const checkoutSource = source.slice(source.indexOf('  async function checkout('), source.indexOf('  async function handleAuth('));
+const orderActionSource = source.slice(source.indexOf('  function setOrderActionBusy('), source.indexOf('  async function openOrderPayment('));
 
 function load(response, { ok = true, status = 200 } = {}) {
   const calls = [];
@@ -20,12 +21,13 @@ function load(response, { ok = true, status = 200 } = {}) {
   const location = { hash: '#/plans', href: '' };
   const context = vm.createContext({
     isPreview: false, state: { auth: 'Bearer checkout-test', renderId: 1 },
+    orderActionsInFlight: new Set(),
     FormData: class { get(name) { return null; } },
     fetch: async (url, options) => {
       calls.push({ url, ...options });
       return { ok, status, json: async () => response };
     },
-    location, document: { getElementById: id => id === 'payment-form' ? form : dialog },
+    location, document: { getElementById: id => id === 'payment-form' ? form : dialog, querySelectorAll: () => [] },
     window: { open: (...args) => opens.push(args) },
     t: key => key, tx: key => key,
     toast: (...args) => notices.push(args), go: route => routes.push(route),
@@ -34,7 +36,7 @@ function load(response, { ok = true, status = 200 } = {}) {
     URL,
     clearAuth() { context.state.auth = ''; }
   });
-  vm.runInContext(apiSource + checkoutSource, context);
+  vm.runInContext(apiSource + orderActionSource + checkoutSource, context);
   return { context, form, button, dialog, location, calls, notices, routes, opens, qr };
 }
 

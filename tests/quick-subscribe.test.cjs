@@ -49,8 +49,8 @@ function load(os = 'windows', url = subscribeUrl) {
 const clients = {
   ios: [['shadowrocket', 'shadowrocket', 'shadowrocket://add/sub://'], ['surge', 'surge', 'surge:///install-config'], ['stash', 'stash', 'stash://install-config']],
   android: [['clash-meta', 'clash-meta', 'clash://install-config'], ['surfboard', 'surfboard', 'surfboard:///install-config'], ['sing-box', 'sing-box', 'sing-box://import-remote-profile']],
-  macos: [['clash-verge', 'clash-meta', 'clash-verge://install-config'], ['surge', 'surge', 'surgeconfig:///install-config'], ['sing-box', 'sing-box', 'sing-box://import-remote-profile']],
-  windows: [['clash-verge', 'clash-meta', 'clash-verge://install-config'], ['clash', 'clash', 'clash://install-config'], ['sing-box', 'sing-box', 'sing-box://import-remote-profile']]
+  macos: [['clash-verge', '', 'clash://install-config'], ['surge', 'surge', 'surgeconfig:///install-config'], ['sing-box', 'sing-box', 'sing-box://import-remote-profile']],
+  windows: [['clash-verge', '', 'clash://install-config'], ['clash', 'clash', 'clash://install-config'], ['sing-box', 'sing-box', 'sing-box://import-remote-profile']]
 };
 
 for (const [os, expected] of Object.entries(clients)) {
@@ -72,7 +72,7 @@ for (const [os, expected] of Object.entries(clients)) {
         ? Buffer.from(importUrl.slice('shadowrocket://add/sub://'.length).split('?')[0], 'base64').toString('utf8')
         : parsed.searchParams.get('url');
       assert.equal(importedUrl, template);
-      assert.equal(new URL(importedUrl).searchParams.get('flag'), flag);
+      assert.equal(new URL(importedUrl).searchParams.get('flag'), flag || new URL(subscribeUrl).searchParams.get('flag'));
       assert.equal(new URL(importedUrl).searchParams.get('token'), 'test+token');
     });
 
@@ -128,3 +128,19 @@ test('Shadowrocket subscription payload uses URL safe base64, as in the bundled 
   assert.ok(!/[+/=]/.test(payload));
   assert.equal(Buffer.from(payload, 'base64url').toString('utf8'), url);
 });
+
+for (const os of ['windows', 'macos']) {
+  test(`${os}: Clash Verge import matches the bundled Xboard theme exactly`, () => {
+    // cedar2025/Xboard d826a3b... theme/Xboard/assets/umi.js:
+    // o = encodeURIComponent(subscribe_url), n = encodeURIComponent(title)
+    // url: `clash://install-config?url=${o}&name=${n}`
+    for (const url of ['https://example.com/s/test-token', subscribeUrl]) {
+      const app = load(os, url);
+      const item = app.context.quickClientItemsByOS(os)[0];
+      app.context.openQuickClientImport(item.client, item.flag);
+      const expected = `clash://install-config?url=${encodeURIComponent(url)}&name=${encodeURIComponent('枫叶云 & Test')}`;
+      assert.equal(app.navigation[0], expected);
+      assert.equal(new URL(app.navigation[0]).searchParams.get('url'), url, 'pass through the backend link without adding or replacing a format flag');
+    }
+  });
+}
