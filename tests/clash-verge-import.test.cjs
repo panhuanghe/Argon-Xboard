@@ -6,7 +6,7 @@ const test = require('node:test');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, '../assets/theme.js'), 'utf8');
-const functions = source.slice(source.indexOf('  function normalizeTemplateFlag('), source.indexOf('  function icon('));
+const functions = source.slice(source.indexOf('  function encodeBase64Utf8('), source.indexOf('  function icon('));
 
 // Clash Verge Rev v2.5.10: scheme.rs extracts the raw suffix after url=;
 // prfitem.rs fix_dirty_url moves &name= from the path to the query when needed.
@@ -59,7 +59,7 @@ test('Clash Verge follows the working native Xboard link and accepts its name pa
         });
         vm.runInContext(functions, context);
         const item = context.quickClientItemsByOS(os)[0];
-        context.openQuickClientImport(item.client, item.flag);
+        context.openQuickClientImport(item.client);
         assert.equal(navigation.length, 1);
         const uri = navigation[0];
         const nativeUri = `clash://install-config?url=${encodeURIComponent(subscribeUrl)}&name=${encodeURIComponent(brand)}`;

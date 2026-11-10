@@ -285,7 +285,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.36'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.37'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -511,37 +511,6 @@
     return html.replace(/\n/g, '<br>');
   }
 
-  function normalizeTemplateFlag(flag) {
-    return String(flag || '').trim().toLowerCase().replace(/_/g, '-');
-  }
-
-  function templateLabel(flag) {
-    const map = {
-      'sing-box': 'Sing-box',
-      'singbox': 'Sing-box',
-      'clash': 'Clash',
-      'clash-meta': 'Clash Meta',
-      'stash': 'Stash',
-      'surge': 'Surge',
-      'surfboard': 'Surfboard',
-      'shadowrocket': 'Shadowrocket'
-    };
-    return map[normalizeTemplateFlag(flag)] || String(flag || '');
-  }
-
-  function buildTemplateSubscribeUrl(subscribeUrl, flag) {
-    const safe = safeHttpUrl(subscribeUrl);
-    if (!safe) return '';
-    try {
-      const parsed = new URL(safe);
-      const normalized = normalizeTemplateFlag(flag);
-      if (normalized) parsed.searchParams.set('flag', normalized);
-      return parsed.toString();
-    } catch (_) {
-      return safe;
-    }
-  }
-
   function encodeBase64Utf8(value) {
     try {
       return btoa(unescape(encodeURIComponent(String(value || ''))));
@@ -550,14 +519,14 @@
     }
   }
 
-  function buildQuickImportUrl(client, templateUrl, os = state.quickSubscribeOS) {
-    const encoded = encodeURIComponent(templateUrl);
+  function buildQuickImportUrl(client, subscribeUrl) {
+    const encoded = encodeURIComponent(subscribeUrl);
     const appName = encodeURIComponent(String(config.brandName || config.title || 'Argon-Xboard'));
     switch (String(client || '').toLowerCase()) {
       case 'shadowrocket':
-        return `shadowrocket://add/sub://${encodeBase64Utf8(templateUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}?remark=${appName}`;
+        return `shadowrocket://add/sub://${encodeBase64Utf8(subscribeUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}?remark=${appName}`;
       case 'surge':
-        return `${String(os || '').toLowerCase() === 'macos' ? 'surgeconfig' : 'surge'}:///install-config?url=${encoded}&name=${appName}`;
+        return `surge:///install-config?url=${encoded}&name=${appName}`;
       case 'stash':
         return `stash://install-config?url=${encoded}&name=${appName}`;
       case 'clash':
@@ -578,24 +547,24 @@
     const current = String(os || 'ios').toLowerCase();
     const groups = {
       ios: [
-        { client: 'shadowrocket', label: '导入到 Shadowrocket', flag: 'shadowrocket' },
-        { client: 'surge', label: '导入到 Surge', flag: 'surge' },
-        { client: 'stash', label: '导入到 Stash', flag: 'stash' }
+        { client: 'shadowrocket', label: '导入到 Shadowrocket' },
+        { client: 'surge', label: '导入到 Surge' },
+        { client: 'stash', label: '导入到 Stash' }
       ],
       android: [
-        { client: 'clash-meta', label: '导入到 Clash Meta', flag: 'clash-meta' },
-        { client: 'surfboard', label: '导入到 Surfboard', flag: 'surfboard' },
-        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+        { client: 'clash-meta', label: '导入到 Clash Meta' },
+        { client: 'surfboard', label: '导入到 Surfboard' },
+        { client: 'sing-box', label: '导入到 Sing-box' }
       ],
       macos: [
-        { client: 'clash-verge', label: '导入到 Clash Verge', flag: '' },
-        { client: 'surge', label: '导入到 Surge', flag: 'surge' },
-        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+        { client: 'clash-verge', label: '导入到 Clash Verge' },
+        { client: 'surge', label: '导入到 Surge' },
+        { client: 'sing-box', label: '导入到 Sing-box' }
       ],
       windows: [
-        { client: 'clash-verge', label: '导入到 Clash Verge', flag: '' },
-        { client: 'clash', label: '导入到 Clash for Windows', flag: 'clash' },
-        { client: 'sing-box', label: '导入到 Sing-box', flag: 'sing-box' }
+        { client: 'clash-verge', label: '导入到 Clash Verge' },
+        { client: 'clash', label: '导入到 Clash for Windows' },
+        { client: 'sing-box', label: '导入到 Sing-box' }
       ]
     };
     return groups[current] || groups.ios;
@@ -610,7 +579,7 @@
     return `<section class="quick-subscribe-card">
       <div class="quick-subscribe-head">
         <h3>一键订阅</h3>
-        <small>与后台订阅模板联动</small>
+        <small>选择客户端导入订阅</small>
       </div>
       <div class="quick-subscribe-actions">
         <button class="quick-action-btn" type="button" data-action="copy-sub">${icon('copy')}<span>复制订阅地址</span></button>
@@ -619,7 +588,7 @@
       <div class="quick-subscribe-tabs">${osList.map(os => `<button type="button" class="quick-tab ${currentOS === os ? 'active' : ''}" data-action="set-quick-os" data-os="${os}">${os.toUpperCase()}</button>`).join('')}</div>
       <div class="quick-client-list">${clients.map(item => {
         const download = getQuickClientDownloadLink(item.client, currentOS);
-        return `<div class="quick-client-entry"><button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}" data-flag="${e(item.flag)}"><span>${e(item.label)}</span><small>${item.flag ? `${e(templateLabel(item.flag))} 模板` : '客户端自动识别'}</small></button>${download ? `<a class="text-link" href="${e(download)}" target="_blank" rel="noopener noreferrer" aria-label="${e(item.label.replace('导入到 ', '下载 '))}">下载客户端</a>` : ''}</div>`;
+        return `<div class="quick-client-entry"><button type="button" class="quick-client-item" data-action="open-quick-client" data-client="${e(item.client)}"><span>${e(item.label)}</span><small>客户端自动识别</small></button>${download ? `<a class="text-link" href="${e(download)}" target="_blank" rel="noopener noreferrer" aria-label="${e(item.label.replace('导入到 ', '下载 '))}">下载客户端</a>` : ''}</div>`;
       }).join('')}</div>
       <p class="field-hint">请允许浏览器打开客户端。若未打开，可复制订阅地址手动导入。</p>
     </section>`;
@@ -696,20 +665,19 @@
     }
   }
 
-  function openQuickClientImport(client, flag) {
+  function openQuickClientImport(client) {
     const subscribeUrl = safeHttpUrl(state.subscribe?.subscribe_url || '');
     if (!subscribeUrl) {
       toast(t('no_subscribe_url'), 'error');
       return;
     }
-    const templateUrl = buildTemplateSubscribeUrl(subscribeUrl, flag);
-    const importUrl = buildQuickImportUrl(client, templateUrl);
+    const importUrl = buildQuickImportUrl(client, subscribeUrl);
     if (importUrl) {
       // Browser visibility cannot tell whether a native protocol handler is installed.
       toast('请在浏览器提示中允许打开客户端；若未打开，可复制订阅地址手动导入，或点击“下载客户端”。', 'info', '正在请求打开客户端');
       window.location.href = importUrl;
     } else {
-      window.open(templateUrl, '_blank', 'noopener');
+      window.open(subscribeUrl, '_blank', 'noopener');
     }
   }
 
@@ -2281,7 +2249,7 @@
         }
       }
     } else if (action === 'open-quick-client') {
-      await openQuickClientImport(target.dataset.client, target.dataset.flag);
+      await openQuickClientImport(target.dataset.client);
     } else if (action === 'reset-subscribe') {
       if (!confirm(t('reset_confirm'))) return;
       try { await api('/user/resetSecurity', { method: 'POST' }); toast(t('reset_done')); render(); } catch (error) { toast(error.message, 'error'); }

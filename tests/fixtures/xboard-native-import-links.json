@@ -1,0 +1,48 @@
+{
+  "source": {
+    "repository": "cedar2025/Xboard",
+    "commit": "d826a3b32f73bde24acce2a3ab033c6538ce121d",
+    "file": "theme/Xboard/assets/umi.js"
+  },
+  "cases": [
+    {
+      "subscribeUrl": "https://example.com/s/test-token",
+      "brand": "枫叶云 & Test",
+      "links": {
+        "Clash": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Clash Meta": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "SingBox": "sing-box://import-remote-profile?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token#%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Shadowrocket": "shadowrocket://add/sub://aHR0cHM6Ly9leGFtcGxlLmNvbS9zL3Rlc3QtdG9rZW4?remark=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surge": "surge:///install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Stash": "stash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surfboard": "surfboard:///install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test"
+      }
+    },
+    {
+      "subscribeUrl": "https://example.com/subscribe?token=test%2Btoken&flag=existing#profile",
+      "brand": "枫叶云 & Test",
+      "links": {
+        "Clash": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Clash Meta": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "SingBox": "sing-box://import-remote-profile?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile#%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Shadowrocket": "shadowrocket://add/sub://aHR0cHM6Ly9leGFtcGxlLmNvbS9zdWJzY3JpYmU_dG9rZW49dGVzdCUyQnRva2VuJmZsYWc9ZXhpc3RpbmcjcHJvZmlsZQ?remark=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surge": "surge:///install-config?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Stash": "stash://install-config?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surfboard": "surfboard:///install-config?url=https%3A%2F%2Fexample.com%2Fsubscribe%3Ftoken%3Dtest%252Btoken%26flag%3Dexisting%23profile&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test"
+      }
+    },
+    {
+      "subscribeUrl": "https://example.com/s/test-token?filters=ss%2Cvmess&name=existing%20name",
+      "brand": "枫叶云 & Test",
+      "links": {
+        "Clash": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Clash Meta": "clash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "SingBox": "sing-box://import-remote-profile?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name#%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Shadowrocket": "shadowrocket://add/sub://aHR0cHM6Ly9leGFtcGxlLmNvbS9zL3Rlc3QtdG9rZW4_ZmlsdGVycz1zcyUyQ3ZtZXNzJm5hbWU9ZXhpc3RpbmclMjBuYW1l?remark=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surge": "surge:///install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Stash": "stash://install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test",
+        "Surfboard": "surfboard:///install-config?url=https%3A%2F%2Fexample.com%2Fs%2Ftest-token%3Ffilters%3Dss%252Cvmess%26name%3Dexisting%2520name&name=%E6%9E%AB%E5%8F%B6%E4%BA%91%20%26%20Test"
+      }
+    }
+  ]
+}
