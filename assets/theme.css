@@ -68,23 +68,34 @@ img { max-width: 100%; }
   color: var(--muted);
 }
 .boot-screen p { margin: 0; font-size: 14px; }
-.boot-line { width: 150px; height: 4px; overflow: hidden; border-radius: 999px; background: var(--line); }
-.boot-line i { display: block; width: 45%; height: 100%; border-radius: inherit; background: var(--primary); animation: boot 1.25s ease-in-out infinite; }
-@keyframes boot { from { transform: translateX(-120%); } to { transform: translateX(340%); } }
 
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand strong { font-size: 18px; color: var(--ink); letter-spacing: -.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.brand small { display: block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.brand-logo { width: 36px; height: 36px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 10px rgba(var(--primary-rgb), .2); }
+.brand strong { display: block; min-width: 0; font-size: 18px; line-height: 1.15; font-weight: 800; color: var(--ink); letter-spacing: .015em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.2; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; }
+.brand-wordmark { position: relative; min-width: 0; }
+.brand-wordmark::after { content: ""; position: absolute; bottom: -5px; left: 0; width: 30px; height: 2px; background: linear-gradient(90deg, #14b6d1, #168fd9); }
+.brand-title { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.brand-title::after { content: ""; width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: #0abdd0; }
+.brand-logo { flex: 0 0 36px; width: 36px; height: 36px; border-radius: 10px; object-fit: cover; box-shadow: 0 4px 10px rgba(var(--primary-rgb), .2); }
 .brand-mark {
   position: relative; flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px;
   background: linear-gradient(135deg, var(--primary), #11cdef);
   box-shadow: 0 8px 20px rgba(var(--primary-rgb), .26);
 }
-.brand-mark span { position: absolute; border: 2px solid rgba(255,255,255,.92); border-radius: 999px; }
-.brand-mark span:first-child { inset: 8px 13px; }
-.brand-mark span:last-child { inset: 13px 8px; }
 .brand-mark--large { width: 54px; height: 54px; border-radius: 17px; }
+.brand-mark--emblem { overflow: hidden; border-radius: 10px; background: transparent; box-shadow: 0 4px 10px rgba(28, 116, 203, .16); }
+.brand-symbol { display: block; width: 100%; height: 100%; }
+.brand-mark--emblem::after {
+  content: ""; position: absolute; top: -25%; left: -70%; width: 42%; height: 150%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5), transparent);
+  transform: translateX(0) skewX(-20deg); pointer-events: none;
+  animation: brand-sweep 6s ease-in-out infinite;
+}
+@keyframes brand-sweep {
+  0%, 8% { transform: translateX(0) skewX(-20deg); opacity: 0; }
+  14% { opacity: 1; }
+  42%, 100% { transform: translateX(480%) skewX(-20deg); opacity: 0; }
+}
 
 .icon {
   width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
@@ -731,6 +742,7 @@ img { max-width: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .brand-mark--emblem::after { animation: none; opacity: 0; }
 }
 
 .node-flag { width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.08); object-fit: cover; display: block; }

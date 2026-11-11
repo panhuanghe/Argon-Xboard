@@ -6,18 +6,17 @@
   <meta name="theme-color" content="{{ $theme_config['primary_color'] ?? '#5e72e4' }}">
   <meta name="description" content="{{ $description ?? '' }}">
   <title>{{ $title }}</title>
-  @if (file_exists(public_path("/theme/{$theme}/favicon.ico")))
-    <link rel="icon" href="/theme/{{ $theme }}/favicon.ico">
-  @endif
-  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.37'))
-  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.37'))
+  @php($assetVersionIcon = @filemtime(public_path("/theme/{$theme}/favicon.ico")) ?: ($version ?? '1.2.38'))
+  <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 64x64" href="/theme/{{ $theme }}/favicon.ico?v={{ $assetVersionIcon }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/theme/{{ $theme }}/assets/favicon-32.png?v={{ $assetVersionIcon }}">
+  @php($assetVersionCss = @filemtime(public_path("/theme/{$theme}/assets/theme.css")) ?: ($version ?? '1.2.38'))
+  @php($assetVersionJs = @filemtime(public_path("/theme/{$theme}/assets/theme.js")) ?: ($version ?? '1.2.38'))
   <link rel="stylesheet" href="/theme/{{ $theme }}/assets/theme.css?v={{ $assetVersionCss }}">
 </head>
 <body>
   <div id="app" aria-live="polite">
     <div class="boot-screen">
-      <div class="brand-mark brand-mark--large"><span></span><span></span></div>
-      <div class="boot-line"><i></i></div>
+      <div class="brand-mark brand-mark--large brand-mark--emblem" aria-hidden="true"><img class="brand-symbol" src="/theme/{{ $theme }}/assets/brand-symbol.png" alt=""></div>
       <p>正在连接控制中心…</p>
     </div>
   </div>

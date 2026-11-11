@@ -59,7 +59,7 @@ Argon-Xboard/
 
 ## 安装到 Xboard
 
-1. 下载 [`Argon-Xboard-1.2.37.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.37/Argon-Xboard-1.2.37.zip)，或从 [GitHub Releases](https://github.com/panhuanghe/Argon-Xboard/releases) 选择其他已发布版本。
+1. 下载 [`Argon-Xboard-1.2.38.zip`](https://github.com/panhuanghe/Argon-Xboard/releases/download/v1.2.38/Argon-Xboard-1.2.38.zip)，或从 [GitHub Releases](https://github.com/panhuanghe/Argon-Xboard/releases) 选择其他已发布版本。
 2. 进入 Xboard 管理后台的「主题」页面，上传该 ZIP。
 3. 切换到 **Argon-Xboard**，按需填写品牌名称、主题色等主题选项；客服群组链接由 Xboard 后台的群组链接统一管控。
 
@@ -104,6 +104,15 @@ Argon-Xboard/
 - 移除强制模板改写函数和模板标签，所有入口显示“客户端自动识别”。
 - 从固定版本的 Xboard 原生主题直接生成参考链接，逐项验证全部 12 个入口，覆盖路径 token、已有查询参数和编码名称。
 - 本地测试通过不代表各客户端实机导入完成；检查记录见 `docs/all-client-import-audit-2026-11-10.md`。
+
+### v1.2.38 品牌区样式
+
+- 默认品牌图标直接使用提供的蓝青星形原图缩放，沿用 38px 显示尺寸，搭配青色圆点及字标下划线。
+- 默认图标带有 6 秒循环扫光；系统开启减少动态效果时关闭动画。
+- 品牌名称继续读取后台配置，自定义 Logo 地址仍优先生效。素材位于 `assets/brand-symbol.png`，108×108px，透明外角。
+- 浏览器图标使用同一原图生成的 `favicon.ico`（16/32/48/64px）和 `assets/favicon-32.png`，正式入口附带缓存版本。
+- 删除首次进入网站时的加载条，启动占位图也使用提供的原图。
+- 检查记录见 `docs/brand-style-2026-11-11.md`，浏览器检查使用 `node tests/brand.browser.cjs`。
 
 ## 本地预览
 

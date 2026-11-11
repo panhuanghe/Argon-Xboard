@@ -285,7 +285,7 @@
   const config = Object.assign({
     title: 'Xboard', brandName: 'Argon-Xboard', tagline: t('tagline'),
     primaryColor: '#5e72e4', logoUrl: '', announcement: '', footerText: t('footer_default'),
-    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.37'
+    loginCaptchaEnabled: '1', authCaptchaEnabled: '1', frontendVersion: '1.2.38'
   }, window.XBOARD_THEME || {});
   const isPreview = Boolean(window.NEBULAX_PREVIEW);
   const ASSETS_BASE = (window.XBOARD_ASSETS || './assets').replace(/\/$/, '');
@@ -718,8 +718,8 @@
   function brand() {
     const visual = config.logoUrl
       ? `<img class="brand-logo" src="${e(config.logoUrl)}" alt="">`
-      : '<span class="brand-mark"><span></span><span></span></span>';
-    return `<div class="brand">${visual}<div><strong>${e(config.brandName || config.title)}</strong><small>dashboard</small></div></div>`;
+      : `<span class="brand-mark brand-mark--emblem" aria-hidden="true"><img class="brand-symbol" src="${e(ASSETS_BASE)}/brand-symbol.png" alt=""></span>`;
+    return `<div class="brand">${visual}<div class="brand-wordmark"><div class="brand-title"><strong>${e(config.brandName || config.title)}</strong></div><small>dashboard</small></div></div>`;
   }
 
   function statCard(iconName, value, label, color = 'bg-gradient-primary') {
